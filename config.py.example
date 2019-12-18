@@ -1,0 +1,15 @@
+CREDIDENTIALS = {
+        'username': 'my@account.com.sbox',
+        'password': 'mypassword',
+        'security_token': 'XXXXXXXXXXXXXXXXXXXXXXXXX',
+        'sandbox': True,
+}
+SF_API_VERSION = '47.0'
+
+DB_NAME = 'localdb'  # Local DB name
+
+DB_SCHEMA = 'salesforce'  # Set to None to use public schema
+
+DB_QUOTE_NAMES = False  # Set to true to have case sensitive table/column names 
+
+JOB_DIR="jobs"
