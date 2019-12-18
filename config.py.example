@@ -11,5 +11,6 @@ DB_NAME = 'localdb'  # Local DB name
 DB_SCHEMA = 'salesforce'  # Set to None to use public schema
 
 DB_QUOTE_NAMES = False  # Set to true to have case sensitive table/column names 
+DB_RENAME_ID = True  # Set to true to rename salesforce "Id" column to "SfId"
 
 JOB_DIR="jobs"

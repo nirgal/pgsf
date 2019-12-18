@@ -1,2 +1,8 @@
-config.py
-mapping/
+__pycache__
+/jobs
+/mapping
+/salesforce-bulk/
+/simple-salesforce/
+/salesforce_bulk
+/simple_salesforce
+/config.py

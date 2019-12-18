@@ -86,11 +86,11 @@ class TableDesc:
         default_import_fields = (
                 'Id', 'DurableId', 'CreatedDate', 'IsDeleted', 'SystemModstamp'
                 )
+        sf_fields = self.get_sf_fields()
         filename = 'mapping/{}.csv'.format(self.name)
         print('Writing', filename)
         with open(filename, 'x') as f:
             f.write('"FieldName", "Import", "Note"\n')  # header
-            sf_fields = self.get_sf_fields()
             for fieldname, fieldinfo in sf_fields.items():
                 if default == 'minimal':
                     if fieldname in default_import_fields:
