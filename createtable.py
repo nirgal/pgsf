@@ -60,24 +60,6 @@ def postgres_const(value):
         return 'NOTIMPLEMENTED'
 
 
-#def postgres_type(field):
-#    pgtype = postgres_type_raw(field)
-#    if DB_RENAME_ID:
-#        if field['name'] == 'Id':
-#            return pgtype  # Can be NULL during creation
-#
-#    if not field['nillable']:
-#        pgtype += ' NOT NULL'
-#    if field['defaultValue']:
-#        pgtype += ' DEFAULT ' + postgres_const(field['defaultValue'])
-#
-#    if field['name'] == 'Id':
-#        pytype += ' PRIMARY KEY'
-#    elif field['unique']:
-#        pgtype += ' UNIQUE'
-#    return pgtype
-
-
 def postgres_coldef_from_sffield(field):
     field_name = field['name']
     field_type = field['type']
@@ -163,9 +145,9 @@ if __name__ == '__main__':
         for line in sql:
             print(line)
     else:
-        from postgres import Postgres
-        p = Postgres()
-        cursor = p.get_cursor()
+        from postgres import get_pg
+        pg = get_pg()
+        cursor = pg.cursor()
         for line in sql:
             cursor.execute(line)
-        p.get_connection().commit()
+        pg.commit()

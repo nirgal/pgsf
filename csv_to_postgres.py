@@ -8,7 +8,7 @@ from createtable import postgres_escape_name, postgres_table_name
 from tabledesc import TableDesc
 
 
-def get_pgsql_import(tabledesc, csv_file_name, rename_id=True):
+def get_pgsql_import(tabledesc, csv_file_name):
     with open(csv_file_name) as f:
         header = f.readline()[:-1]
         quoted_fields = header.split(',')
@@ -55,9 +55,9 @@ def job_csv_to_postgres(job):
 
     print(sql, file=sys.stderr)
 
-    from postgres import Postgres
-    p = Postgres()
-    cursor = p.get_cursor()
+    from postgres import get_pg
+    pg = get_pg()
+    cursor = pg.cursor()
     for csv in successfull_csv_files:
         with open(csv) as file:
             cursor.copy_expert(sql, file)
@@ -66,8 +66,8 @@ def job_csv_to_postgres(job):
     cursor.execute("""
         INSERT INTO sync.status (tablename, syncuntil) VALUES(%s, %s);
         """,
-        (table_name, job_status['systemModstamp']))
-    p.get_connection().commit()
+                   (table_name, job_status['systemModstamp']))
+    pg.commit()
 
 
 if __name__ == '__main__':
