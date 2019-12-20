@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import argparse
 import json
+import sys
 
 from config import DB_RENAME_ID, JOB_DIR
 from createtable import postgres_escape_name, postgres_table_name
@@ -52,16 +53,20 @@ def job_csv_to_postgres(job):
 
     sql = get_pgsql_import(td, successfull_csv_files[0])
 
-    print(sql)
+    print(sql, file=sys.stderr)
 
     from postgres import Postgres
     p = Postgres()
     cursor = p.get_cursor()
     for csv in successfull_csv_files:
         with open(csv) as file:
-            x = cursor.copy_expert(sql, file)
-            print(cursor.statusmessage)
-            #print('Imported {} records.', batch['numberRecordsProcessed'], file=sys.stderr)
+            cursor.copy_expert(sql, file)
+            print("rowcount:", cursor.rowcount, file=sys.stderr)
+
+    cursor.execute("""
+        INSERT INTO sync.status (tablename, syncuntil) VALUES(%s, %s);
+        """,
+        (table_name, job_status['systemModstamp']))
     p.get_connection().commit()
 
 

@@ -17,6 +17,8 @@ Setup
 
 Copy config.py.example to config.py and customize it. This will gave you access.
 
+The PostgreSQL database should already be created, with the schemas created. See ``install.sql``
+
 Download a table
 ================
 
@@ -29,7 +31,7 @@ will create a file ``mapping/Contact.csv`` with the list of fields you'll want t
 
 ::
 
-   ./query Contact
+   ./query_bulk.py Contact
 
 will create a bulk download job, and print a jobid.
 
