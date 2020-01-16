@@ -52,3 +52,9 @@ will create a PostgreSQL version of a SF table
    ./csv_to_postgres.py <jobid>
 
 will import the job csv files into a PostgreSQL table.
+
+
+TODO
+====
+
+Create the indexes automatically.

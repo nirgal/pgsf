@@ -25,17 +25,48 @@ class TableDesc:
             self.__sf_desc_cache = accessor.describe()
             return self.__sf_desc_cache
 
+    @property
+    def sf_field_definition(self):
+        '''
+        Run a query against salesforce FieldDefinition table to get extra
+        field information.
+        Data is cached for reuse.
+        '''
+        try:
+            return self.__sf_field_definition_cache
+        except AttributeError:
+            import query
+            soql = """SELECT QualifiedApiName,IsIndexed
+                      FROM FieldDefinition
+                      WHERE EntityDefinitionId='{}'""".format(self.name)
+            result = query.query(soql)
+            self.__sf_field_definition_cache = result['records']
+            return self.__sf_field_definition_cache
+
     def get_sf_fields(self):
         '''
         Return the fields as an OrderedDict.
         Data is cached for reuse.
         '''
         try:
+            # return cache if available
             return self.__fields_cache
         except AttributeError:
             self.__fields_cache = OrderedDict()
+            # First get the info from sf_desc
             for sf_field_info in self.sf_desc['fields']:
                 self.__fields_cache[sf_field_info['name']] = sf_field_info
+            # Then the the IsIndexed from table FieldDefinition
+            sf_definition = self.sf_field_definition
+            for record in sf_definition:
+                name = record['QualifiedApiName']
+                if name in self.__fields_cache.keys():
+                    self.__fields_cache[name]['IsIndexed'] = \
+                            record['IsIndexed']
+                else:
+                    print('WARNING: Table {}, field {} '
+                          'is not available from describe'
+                          .format(self.name, name))
             return self.__fields_cache
 
     def get_sync_field_names(self):
@@ -87,10 +118,11 @@ class TableDesc:
                 'Id', 'DurableId', 'CreatedDate', 'IsDeleted', 'SystemModstamp'
                 )
         sf_fields = self.get_sf_fields()
+
         filename = 'mapping/{}.csv'.format(self.name)
         print('Writing', filename)
         with open(filename, 'x') as f:
-            f.write('"FieldName", "Import", "Note"\n')  # header
+            f.write('"FieldName", "Import", "Indexed", "Note"\n')  # header
             for fieldname, fieldinfo in sf_fields.items():
                 if default == 'minimal':
                     if fieldname in default_import_fields:
@@ -112,8 +144,17 @@ class TableDesc:
                 if fieldinfo['calculated']:
                     notes.append('calculated')
                     isimport = ''
-                f.write('"{}",{},{}\n'.format(
-                    fieldname, isimport, ','.join(notes)))
+
+                isindexed = fieldinfo.get('IsIndexed', None)
+                if isindexed is None:
+                    notes.append('nofielddefinition')
+                if isindexed:
+                    isindexed = '1'
+                else:
+                    isindexed = ''
+
+                f.write('"{}",{},{},{}\n'.format(
+                    fieldname, isimport, isindexed, ','.join(notes)))
 
 
 if __name__ == '__main__':
