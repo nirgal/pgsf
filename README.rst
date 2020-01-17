@@ -57,4 +57,4 @@ will import the job csv files into a PostgreSQL table.
 TODO
 ====
 
-Create the indexes automatically.
+...

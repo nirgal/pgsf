@@ -39,8 +39,8 @@ class TableDesc:
             soql = """SELECT QualifiedApiName,IsIndexed
                       FROM FieldDefinition
                       WHERE EntityDefinitionId='{}'""".format(self.name)
-            result = query.query(soql)
-            self.__sf_field_definition_cache = result['records']
+            qry = query.query(soql)
+            self.__sf_field_definition_cache = list(qry)
             return self.__sf_field_definition_cache
 
     def get_sf_fields(self):

@@ -18,6 +18,19 @@ def spprint_ordereddict(od):
 
 
 def query(soql, include_deleted=False):
+    def check_result(res):
+        known_attributes = ('done', 'nextRecordsUrl', 'records', 'totalSize')
+        for key in result.keys():
+            if key not in known_attributes:
+                print("WARNING: Unexpected attribute {} in query result"
+                      .format(key),
+                      file=sys.stderr)
+
+        if (result.get('done') is not True
+                and result.get('nextRecordsUrl') is None):
+            print("WARNING: expected 'done' or 'nextRecordsUrl'",
+                  file=sys.stderr)
+
     sf = get_Salesforce()
     try:
         result = sf.query(soql, include_deleted=include_deleted)
@@ -25,15 +38,47 @@ def query(soql, include_deleted=False):
         print("ERROR:", e.content[0]['message'], file=sys.stderr)
         return None
 
-    assert result['done']
-    if result['done'] is not True:
-        print("QUERY returned done =", result['done'], file=sys.stderr)
+    check_result(result)
+
+    print('DEBUG: sf.query got {} record(s).'.format(
+            len(result['records'])),
+          file=sys.stderr)
+    print('NNN:', type(result['records']))
+    for record in result['records']:
+        yield record
+
+    while result.get('nextRecordsUrl'):
+        result = sf.query_more(
+                result['nextRecordsUrl'],
+                identifier_is_url=True,
+                include_deleted=include_deleted)
+        print('DEBUG: sf.query got {} record(s).'.format(
+                len(result['records'])),
+              file=sys.stderr)
+
+        check_result(result)
+
+        for record in result['records']:
+            yield record
+
+
+def query_count(soql, include_deleted=False):
+    '''
+    Simmilar to query, but only returns 'totalSize' attribute.
+    This is desirable for queries like "SELECT COUNT() ...".
+    '''
+    sf = get_Salesforce()
+    try:
+        result = sf.query(soql, include_deleted=include_deleted)
+    except SalesforceMalformedRequest as e:
+        print("ERROR:", e.content[0]['message'], file=sys.stderr)
         return None
 
-    return result
+    return result['totalSize']
 
 
 if __name__ == '__main__':
+
     parser = argparse.ArgumentParser(
         description='Run an SOQL query Salesforce')
     parser.add_argument(
@@ -41,26 +86,19 @@ if __name__ == '__main__':
             default=False, action='store_true',
             help='include deleted records')
     parser.add_argument(
+            '--count',
+            default=False, action='store_true',
+            help='only prints number of records')
+    parser.add_argument(
             'soql',
             help='the query to tun')
-    args = parser.parse_args()
-
-    result = query(args.soql, args.include_deleted)
     # exemple:
     # SELECT COUNT() FROM Campaign WHERE SystemModStamp>2019-12-18T11:14:55Z
+    args = parser.parse_args()
 
-    nrecords = result['totalSize']
-    try:
-        firstrecord = result['records'][0]
-    except IndexError:
-        print("QUERY", nrecords, "records", file=sys.stderr)
+    if args.count:
+        print(query_count(args.soql, args.include_deleted))
     else:
-        recordtype = firstrecord['attributes']['type']
-        print("QUERY", nrecords, recordtype, "records", file=sys.stderr)
-
-    for record in result['records']:
-        print(spprint_ordereddict(record))
-        print
-
-    # print(result.keys())
-    # print('Created job', job, file=sys.stderr)
+        for record in query(args.soql, args.include_deleted):
+            print(spprint_ordereddict(record))
+            print

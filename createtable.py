@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import argparse
-from pprint import pprint
 import sys
 
 from config import DB_QUOTE_NAMES, DB_RENAME_ID, DB_SCHEMA
