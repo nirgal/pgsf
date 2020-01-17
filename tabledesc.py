@@ -84,6 +84,21 @@ class TableDesc:
                     result.append(row[0])
         return result
 
+    def get_indexed_sync_field_names(self):
+        '''
+        Returns a list of field names that should be indexed.
+        That is the field names in first column of the csv mapping file having
+        the third column set to 1.
+        See self.make_csv_fieldlist
+        '''
+        filename = 'mapping/{}.csv'.format(self.name)
+        result = []
+        with open(filename) as f:
+            for row in csv.reader(f):
+                if row[2] == '1':
+                    result.append(row[0])
+        return result
+
     def get_sync_fields(self):
         '''
         Returns an OrderedDict of fields to be synchronized

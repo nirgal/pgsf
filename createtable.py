@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import argparse
+from pprint import pprint
 import sys
 
 from config import DB_QUOTE_NAMES, DB_RENAME_ID, DB_SCHEMA
@@ -119,14 +120,27 @@ def get_pgsql_create(table_name):
             print('WARNING: field {} should be composed/aggregated locally'
                   .format(field_name),
                   file=sys.stderr)
-        # pprint(field)
-        # print(field)
         lines += postgres_coldef_from_sffield(field)
-
-    create_table_stmt = 'CREATE TABLE {} (\n{}\n);'.format(
+    statements = [
+        'CREATE TABLE {} (\n{}\n);'.format(
             postgres_table_name(table_name),
             ',\n'.join(lines))
-    return (create_table_stmt,)
+        ]
+
+    indexed_fields_names = tabledesc.get_indexed_sync_field_names()
+    for field_name, field in sync_fields.items():
+        if field_name == 'Id' and not DB_RENAME_ID:
+            continue  # primary key already there
+        if field_name not in indexed_fields_names:
+            continue
+        if field.get('IsIndexed'):
+            statements.append(
+                'CREATE INDEX {} ON {} ({});'.format(
+                    postgres_escape_name('{}_{}_idx'.format(
+                            table_name, field_name)),
+                    postgres_table_name(table_name),
+                    postgres_escape_name(field_name)))
+    return statements
 
 
 if __name__ == '__main__':
