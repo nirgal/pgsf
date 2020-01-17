@@ -50,6 +50,7 @@ if __name__ == '__main__':
             help='limit number of rows')
     parser.add_argument(
             '--pk-chunking',
+            metavar='SIZE',
             type=int,
             help='chunk size')
     parser.add_argument(
