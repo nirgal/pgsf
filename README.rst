@@ -8,9 +8,10 @@ Requirements
 This tools requires
 python3 python3-psycopg2
 
-You also need python packages ``simple_salesforce`` and ``salesforce_bulk`` available from
-https://github.com/simple-salesforce/simple-salesforce.git
-https://github.com/heroku/salesforce-bulk.git
+You also need python packages ``simple_salesforce`` and ``salesforce_bulk`` available from:
+
+- https://github.com/simple-salesforce/simple-salesforce.git
+- https://github.com/heroku/salesforce-bulk.git
 
 Setup
 =====
@@ -57,4 +58,4 @@ will import the job csv files into a PostgreSQL table.
 TODO
 ====
 
-...
+- Close the jobs after download

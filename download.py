@@ -74,6 +74,7 @@ def download(job, pool_time=5):
             # print('.', end='', file=sys.stderr, flush=True)
         except requests.exceptions.ConnectionError:
             # At that point, a connection error is bad, but not fatal
+            # Let's retry
             pass
             # print('E', end='', file=sys.stderr, flush=True)
         sleep(pool_time)
