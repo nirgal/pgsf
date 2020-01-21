@@ -110,6 +110,13 @@ def download(job, pool_time=5):
                 print('.', end='', file=sys.stderr, flush=True)
             print('', file=sys.stderr)
 
+    if job_status['state'] == 'Open':
+        print('Closing job', file=sys.stderr)
+        bulk.close_job(job)
+        job_status = bulk.job_status(job)
+        # Update the data after closing the job
+        with open(JOB_DIR + '/' + job + '/' + 'status.json', 'w') as file:
+            file.write(json.dumps(job_status, indent=4))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(

@@ -58,4 +58,3 @@ will import the job csv files into a PostgreSQL table.
 TODO
 ====
 
-- Close the jobs after download

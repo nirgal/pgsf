@@ -43,7 +43,6 @@ def query(soql, include_deleted=False):
     print('DEBUG: sf.query got {} record(s).'.format(
             len(result['records'])),
           file=sys.stderr)
-    print('NNN:', type(result['records']))
     for record in result['records']:
         yield record
 

@@ -55,11 +55,15 @@ class TableDesc:
             self.__fields_cache = OrderedDict()
             # First get the info from sf_desc
             for sf_field_info in self.sf_desc['fields']:
+                # if sf_field_info['name'] == 'ChannelProgramName':
+                #     print('NNN1:', sf_field_info)
                 self.__fields_cache[sf_field_info['name']] = sf_field_info
             # Then the the IsIndexed from table FieldDefinition
             sf_definition = self.sf_field_definition
             for record in sf_definition:
                 name = record['QualifiedApiName']
+                # if name == 'ChannelProgramName':
+                #     print('NNN2:', record)
                 if name in self.__fields_cache.keys():
                     self.__fields_cache[name]['IsIndexed'] = \
                             record['IsIndexed']
