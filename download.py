@@ -118,6 +118,7 @@ def download(job, pool_time=5):
         with open(JOB_DIR + '/' + job + '/' + 'status.json', 'w') as file:
             file.write(json.dumps(job_status, indent=4))
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Download csv data from salesforce')
