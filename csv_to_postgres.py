@@ -49,7 +49,8 @@ def job_csv_to_postgres(job):
             '{}/{}/{}.{}'.format(
                 JOB_DIR, job, batch['id'], job_status['contentType'])
             for batch in batches
-            if batch['state'] == 'Completed']
+            if batch['state'] == 'Completed'
+            ]
 
     sql = get_pgsql_import(td, successfull_csv_files[0])
 
