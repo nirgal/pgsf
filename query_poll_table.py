@@ -80,14 +80,15 @@ def pg_merge_update(td, tmp_tablename):
             [postgres_escape_name(f) for f in fieldnames])
     excluded_quoted_field_names = ','.join(
             ['EXCLUDED.'+postgres_escape_name(f) for f in fieldnames])
-    sql = '''INSERT INTO {quoted_table_dest} 
+    sql = '''INSERT INTO {quoted_table_dest}
              ( {quoted_field_names} )
              SELECT {quoted_field_names}
              FROM {quoted_table_src}
              WHERE NOT "IsDeleted"
              ON CONFLICT ( "Id" )
              DO UPDATE
-                 SET ( {quoted_field_names} ) = ( {excluded_quoted_field_names} )
+                 SET ( {quoted_field_names} )
+                 = ( {excluded_quoted_field_names} )
            '''.format(
             quoted_table_dest=quoted_table_dest,
             quoted_table_src=quoted_table_src,
@@ -111,18 +112,17 @@ def pg_merge_update(td, tmp_tablename):
     cursor.execute(sql)
     print("pg DELETE rowcount:", cursor.rowcount, file=sys.stderr)
 
-    sql='''UPDATE sync.status
-           SET syncuntil=(
-               select max("SystemModstamp")
-               FROM {quoted_table_dest}
-               )
-           WHERE tablename={str_table_name}
-        '''.format(
+    sql = '''UPDATE sync.status
+             SET syncuntil=(
+                 select max("SystemModstamp")
+                 FROM {quoted_table_dest}
+                 )
+             WHERE tablename={str_table_name}
+          '''.format(
                 quoted_table_dest=quoted_table_dest,
                 str_table_name=postgres_escape_str(td.name),
                 )
     cursor.execute(sql)
-
 
     pg.commit()
 
@@ -134,7 +134,6 @@ def sync_table(tablename):
         print('No change in table', tablename, file=sys.stderr)
         return
     print('Downloaded to', csvfilename, file=sys.stderr)
-
 
     pg = get_pg()
     cursor = pg.cursor()
