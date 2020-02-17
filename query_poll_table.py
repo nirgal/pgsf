@@ -96,7 +96,7 @@ def pg_merge_update(td, tmp_tablename):
             excluded_quoted_field_names=excluded_quoted_field_names,
             )
     cursor.execute(sql)
-    print("pg INSERT rowcount:", cursor.rowcount, file=sys.stderr)
+    print("pg INSERT/UPDATE rowcount:", cursor.rowcount, file=sys.stderr)
 
     sql = '''DELETE FROM {quoted_table_dest}
              WHERE {id} IN (
@@ -114,7 +114,7 @@ def pg_merge_update(td, tmp_tablename):
 
     sql = '''UPDATE sync.status
              SET syncuntil=(
-                 select max("SystemModstamp")
+                 SELECT max("SystemModstamp")
                  FROM {quoted_table_dest}
                  )
              WHERE tablename={str_table_name}
