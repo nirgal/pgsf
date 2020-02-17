@@ -33,7 +33,8 @@ def postgres_json_to_csv(field, value):
     compatible value.
     '''
     def csv_quote(value):
-        return '"' + value.replace('\\', '\\\\').replace('"', '\\"') + '"'
+        #return '"' + value.replace('\\', '\\\\').replace('"', '\\"') + '"'
+        return '"' + value.replace('"', '""') + '"'
 
     sftype = field['type']
     if value is None:
