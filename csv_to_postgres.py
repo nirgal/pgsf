@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 
 import argparse
-import logging
 import json
+import logging
 
 import config
 from createtable import postgres_escape_name, postgres_table_name
@@ -83,7 +83,9 @@ if __name__ == '__main__':
             help='Job id')
     args = parser.parse_args()
 
-    logging.basicConfig(filename=config.LOGFILE,
-            format=config.LOGFORMAT, level=config.LOGLEVEL)
+    logging.basicConfig(
+            filename=config.LOGFILE,
+            format=config.LOGFORMAT,
+            level=config.LOGLEVEL)
 
     job_csv_to_postgres(args.job)

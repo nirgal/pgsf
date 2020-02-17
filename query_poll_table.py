@@ -170,7 +170,9 @@ if __name__ == '__main__':
             help='the table name to refresh')
     args = parser.parse_args()
 
-    logging.basicConfig(filename=config.LOGFILE,
-            format=config.LOGFORMAT, level=config.LOGLEVEL)
+    logging.basicConfig(
+            filename=config.LOGFILE,
+            format=config.LOGFORMAT,
+            level=config.LOGLEVEL)
 
     sync_table(args.table)

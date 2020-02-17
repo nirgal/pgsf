@@ -1,12 +1,14 @@
 #!/usr/bin/python3
 
 import argparse
+import logging
 
 import config
 from salesforce import get_SalesforceBulk
 from tabledesc import TableDesc
 
 logger = logging.getLogger(__name__)
+
 
 def make_query(tabledesc,
                content_type='CSV',
@@ -60,8 +62,10 @@ if __name__ == '__main__':
             help='disable pk chuncking')
     args = parser.parse_args()
 
-    logging.basicConfig(filename=config.LOGFILE,
-            format=config.LOGFORMAT, level=config.LOGLEVEL)
+    logging.basicConfig(
+            filename=config.LOGFILE,
+            format=config.LOGFORMAT,
+            level=config.LOGLEVEL)
 
     if args.pk_chunking:
         pk_chunking = args.pk_chunking

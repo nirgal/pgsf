@@ -3,6 +3,7 @@
 import argparse
 import logging
 
+import config
 from salesforce import get_Salesforce
 from simple_salesforce.exceptions import SalesforceMalformedRequest
 
@@ -19,6 +20,7 @@ def spprint_ordereddict(od):
 
 def query(soql, include_deleted=False):
     logger = logging.getLogger(__name__)
+
     def check_result(res):
         known_attributes = ('done', 'nextRecordsUrl', 'records', 'totalSize')
         for key in result.keys():
@@ -91,8 +93,10 @@ if __name__ == '__main__':
     # SELECT COUNT() FROM Campaign WHERE SystemModStamp>2019-12-18T11:14:55Z
     args = parser.parse_args()
 
-    logging.basicConfig(filename=config.LOGFILE,
-            format=config.LOGFORMAT, level=config.LOGLEVEL)
+    logging.basicConfig(
+            filename=config.LOGFILE,
+            format=config.LOGFORMAT,
+            level=config.LOGLEVEL)
 
     if args.count:
         print(query_count(args.soql, args.include_deleted))

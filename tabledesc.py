@@ -5,9 +5,11 @@ import csv
 import logging
 from collections import OrderedDict
 
+import config
 from salesforce import get_Salesforce
 
 logger = logging.getLogger(__name__)
+
 
 class TableDesc:
     def __init__(self, name):
@@ -187,7 +189,9 @@ if __name__ == '__main__':
             help='table name')
     args = parser.parse_args()
 
-    logging.basicConfig(filename=config.LOGFILE,
-            format=config.LOGFORMAT, level=config.LOGLEVEL)
+    logging.basicConfig(
+            filename=config.LOGFILE,
+            format=config.LOGFORMAT,
+            level=config.LOGLEVEL)
 
     TableDesc(args.table).make_csv_fieldlist()

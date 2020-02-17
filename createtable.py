@@ -33,7 +33,7 @@ def postgres_json_to_csv(field, value):
     compatible value.
     '''
     def csv_quote(value):
-        #return '"' + value.replace('\\', '\\\\').replace('"', '\\"') + '"'
+        # return '"' + value.replace('\\', '\\\\').replace('"', '\\"') + '"'
         return '"' + value.replace('"', '""') + '"'
 
     sftype = field['type']
@@ -144,10 +144,10 @@ def get_pgsql_create(table_name):
     for field_name, field in sync_fields.items():
         if field['calculated']:
             logger.warning('Field %s should be calculated locally',
-                    field_name)
+                           field_name)
         if tabledesc.is_field_compound(field_name):
             logger.warning('Field %s should be composed/aggregated locally',
-                    field_name)
+                           field_name)
         lines += postgres_coldef_from_sffield(field)
     statements = [
         'CREATE TABLE {} (\n{}\n);'.format(
@@ -183,8 +183,10 @@ if __name__ == '__main__':
             help='table to create in postgres')
     args = parser.parse_args()
 
-    logging.basicConfig(filename=config.LOGFILE,
-            format=config.LOGFORMAT, level=config.LOGLEVEL)
+    logging.basicConfig(
+            filename=config.LOGFILE,
+            format=config.LOGFORMAT,
+            level=config.LOGLEVEL)
 
     sql = get_pgsql_create(args.table)
     if args.dry_run:

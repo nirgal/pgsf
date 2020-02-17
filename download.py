@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 
 import argparse
-import logging
 import json
+import logging
 import os
 # from pprint import pprint
 from time import sleep
@@ -95,7 +95,7 @@ def download(job, pool_time=5):
         batch_id = batch['id']
         if batch['state'] == 'NotProcessed':
             logger.debug('Skipping batch %s in state "NotProcessed".',
-                    batch_id)
+                         batch_id)
             continue
         filename = (config.JOB_DIR + '/' + job + '/' + batch_id + '.'
                     + job_status['contentType'])
@@ -109,7 +109,8 @@ def download(job, pool_time=5):
         bulk.close_job(job)
         job_status = bulk.job_status(job)
         # Update the data after closing the job
-        with open(config.JOB_DIR + '/' + job + '/' + 'status.json', 'w') as file:
+        jsonfilename = config.JOB_DIR + '/' + job + '/' + 'status.json'
+        with open(jsonfilename, 'w') as file:
             file.write(json.dumps(job_status, indent=4))
 
 
@@ -121,8 +122,10 @@ if __name__ == '__main__':
             help='job id')
     args = parser.parse_args()
 
-    logging.basicConfig(filename=config.LOGFILE,
-            format=config.LOGFORMAT, level=config.LOGLEVEL)
+    logging.basicConfig(
+            filename=config.LOGFILE,
+            format=config.LOGFORMAT,
+            level=config.LOGLEVEL)
 
     job = args.job
 
