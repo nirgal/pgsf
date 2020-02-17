@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import sys
+import logging
 
 import psycopg2
 
@@ -16,6 +16,7 @@ def get_pg():
     try:
         return __pg_connection
     except NameError:
-        print('Opening new connection to postgres', file=sys.stderr)
+        logger = logging.getLogger(__name__)
+        logger.debug('Opening new connection to postgres')
         __pg_connection = psycopg2.connect("dbname={}".format(DB_NAME))
         return __pg_connection

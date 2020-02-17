@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 
 import argparse
-import sys
+import logging
 
-from config import DB_QUOTE_NAMES, DB_RENAME_ID, DB_SCHEMA
+import config
 from tabledesc import TableDesc
 
 
@@ -63,15 +63,15 @@ def postgres_escape_str(s):
 
 def postgres_escape_name(name):
     assert '"' not in name
-    if DB_QUOTE_NAMES:
+    if config.DB_QUOTE_NAMES:
         return '"' + name + '"'
     else:
         return name
 
 
 def postgres_table_name(name):
-    if DB_SCHEMA is not None:
-        result = postgres_escape_name(DB_SCHEMA)
+    if config.DB_SCHEMA is not None:
+        result = postgres_escape_name(config.DB_SCHEMA)
         result += '.'
     else:
         result = ''
@@ -116,7 +116,7 @@ def postgres_coldef_from_sffield(field):
             ]
     pgtype = postgres_type_raw(field)
     if field_name == 'Id':
-        if DB_RENAME_ID:
+        if config.DB_RENAME_ID:
             field_name = 'SfId'  # Can be NULL during inserts
         else:
             pgtype += ' PRIMARY KEY'
@@ -131,24 +131,23 @@ def postgres_coldef_from_sffield(field):
 
 
 def get_pgsql_create(table_name):
-    print('Analyzing', table_name, file=sys.stderr)
+    logger = logging.getLogger(__name__)
+    logger.debug('Analyzing %s', table_name)
 
     tabledesc = TableDesc(table_name)
 
-    if DB_RENAME_ID:
+    if config.DB_RENAME_ID:
         lines = [' id SERIAL PRIMARY KEY']
     else:
         lines = []
     sync_fields = tabledesc.get_sync_fields()
     for field_name, field in sync_fields.items():
         if field['calculated']:
-            print('WARNING: field {} should be calculated locally'
-                  .format(field_name),
-                  file=sys.stderr)
+            logger.warning('Field %s should be calculated locally',
+                    field_name)
         if tabledesc.is_field_compound(field_name):
-            print('WARNING: field {} should be composed/aggregated locally'
-                  .format(field_name),
-                  file=sys.stderr)
+            logger.warning('Field %s should be composed/aggregated locally',
+                    field_name)
         lines += postgres_coldef_from_sffield(field)
     statements = [
         'CREATE TABLE {} (\n{}\n);'.format(
@@ -158,7 +157,7 @@ def get_pgsql_create(table_name):
 
     indexed_fields_names = tabledesc.get_indexed_sync_field_names()
     for field_name, field in sync_fields.items():
-        if field_name == 'Id' and not DB_RENAME_ID:
+        if field_name == 'Id' and not config.DB_RENAME_ID:
             continue  # primary key already there
         if field_name not in indexed_fields_names:
             continue
@@ -183,6 +182,10 @@ if __name__ == '__main__':
             'table',
             help='table to create in postgres')
     args = parser.parse_args()
+
+    logging.basicConfig(filename=config.LOGFILE,
+            format=config.LOGFORMAT, level=config.LOGLEVEL)
+
     sql = get_pgsql_create(args.table)
     if args.dry_run:
         for line in sql:

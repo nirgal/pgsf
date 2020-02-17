@@ -1,11 +1,12 @@
 #!/usr/bin/python3
 
 import argparse
-import sys
 
+import config
 from salesforce import get_SalesforceBulk
 from tabledesc import TableDesc
 
+logger = logging.getLogger(__name__)
 
 def make_query(tabledesc,
                content_type='CSV',
@@ -23,7 +24,7 @@ def make_query(tabledesc,
         query += ' WHERE ' + where
     if limit:
         query += ' LIMIT ' + str(limit)
-    print("Query: ", query, file=sys.stderr)
+    logger.debug("Query: %s", query)
     bulk.query(job, query)
     # bulk.close_job(job)
 
@@ -59,6 +60,9 @@ if __name__ == '__main__':
             help='disable pk chuncking')
     args = parser.parse_args()
 
+    logging.basicConfig(filename=config.LOGFILE,
+            format=config.LOGFORMAT, level=config.LOGLEVEL)
+
     if args.pk_chunking:
         pk_chunking = args.pk_chunking
     elif args.no_pk_chunking:
@@ -72,4 +76,4 @@ if __name__ == '__main__':
             tabledesc, where=args.where, limit=args.limit,
             pk_chunking=pk_chunking)
 
-    print('Created job', job, file=sys.stderr)
+    logger.info('Created job %s', job)

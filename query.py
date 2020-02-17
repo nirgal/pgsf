@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 import argparse
-import sys
+import logging
 
 from salesforce import get_Salesforce
 from simple_salesforce.exceptions import SalesforceMalformedRequest
@@ -18,31 +18,28 @@ def spprint_ordereddict(od):
 
 
 def query(soql, include_deleted=False):
+    logger = logging.getLogger(__name__)
     def check_result(res):
         known_attributes = ('done', 'nextRecordsUrl', 'records', 'totalSize')
         for key in result.keys():
             if key not in known_attributes:
-                print("WARNING: Unexpected attribute {} in query result"
-                      .format(key),
-                      file=sys.stderr)
+                logger.warning("Unexpected attribute %s in query result", key)
 
         if (result.get('done') is not True
                 and result.get('nextRecordsUrl') is None):
-            print("WARNING: expected 'done' or 'nextRecordsUrl'",
-                  file=sys.stderr)
+            logger.warning("Expected 'done' or 'nextRecordsUrl'")
 
     sf = get_Salesforce()
     try:
         result = sf.query(soql, include_deleted=include_deleted)
     except SalesforceMalformedRequest as e:
-        print("ERROR:", e.content[0]['message'], file=sys.stderr)
+        logger.error("%s", e.content[0]['message'])
         return None
 
     check_result(result)
 
-    print('DEBUG: sf.query got {} record(s).'.format(
-            len(result['records'])),
-          file=sys.stderr)
+    logger.info('sf.query got %s record(s).', len(result['records']))
+
     for record in result['records']:
         yield record
 
@@ -51,9 +48,7 @@ def query(soql, include_deleted=False):
                 result['nextRecordsUrl'],
                 identifier_is_url=True,
                 include_deleted=include_deleted)
-        print('DEBUG: sf.query got {} record(s).'.format(
-                len(result['records'])),
-              file=sys.stderr)
+        logger.info('sf.query got %s record(s).', len(result['records']))
 
         check_result(result)
 
@@ -66,11 +61,12 @@ def query_count(soql, include_deleted=False):
     Simmilar to query, but only returns 'totalSize' attribute.
     This is desirable for queries like "SELECT COUNT() ...".
     '''
+    logger = logging.getLogger(__name__)
     sf = get_Salesforce()
     try:
         result = sf.query(soql, include_deleted=include_deleted)
     except SalesforceMalformedRequest as e:
-        print("ERROR:", e.content[0]['message'], file=sys.stderr)
+        logger.error("%s", e.content[0]['message'])
         return None
 
     return result['totalSize']
@@ -94,6 +90,9 @@ if __name__ == '__main__':
     # exemple:
     # SELECT COUNT() FROM Campaign WHERE SystemModStamp>2019-12-18T11:14:55Z
     args = parser.parse_args()
+
+    logging.basicConfig(filename=config.LOGFILE,
+            format=config.LOGFORMAT, level=config.LOGLEVEL)
 
     if args.count:
         print(query_count(args.soql, args.include_deleted))

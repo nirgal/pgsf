@@ -14,3 +14,7 @@ DB_QUOTE_NAMES = False  # Set to true to have case sensitive table/column names
 DB_RENAME_ID = True  # Set to true to rename salesforce "Id" column to "SfId"
 
 JOB_DIR="jobs"
+
+LOGFILE = 'log/pgsf.log'
+LOGFORMAT = '%(asctime)-15s - %(name)s - %(levelname)s - %(message)s'
+LOGLEVEL = 10  # Debug

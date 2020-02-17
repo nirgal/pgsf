@@ -1,10 +1,10 @@
 #!/usr/bin/python3
 
 import argparse
-import sys
+import logging
 from datetime import datetime
 
-from config import JOB_DIR
+import config
 from createtable import (postgres_escape_name, postgres_escape_str,
                          postgres_json_to_csv, postgres_table_name)
 from csv_to_postgres import get_pgsql_import
@@ -15,7 +15,7 @@ from tabledesc import TableDesc
 
 def create_csv_query_file(tablename):
     return '{}/query_{}_{}.csv'.format(
-            JOB_DIR, tablename,
+            config.JOB_DIR, tablename,
             datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%fZ'))
 
 
@@ -24,6 +24,7 @@ def download_changes(td):
     td is a tabledesc object
     returns the name of the csvfile where the changes where downloaded.
     '''
+    logger = logging.getLogger(__name__)
     fieldnames = td.get_sync_field_names()
 
     pg = get_pg()
@@ -32,10 +33,9 @@ def download_changes(td):
                    (td.name,))
     line = cursor.fetchone()
     if line is None:
-        print("Can't find sync info for table {}. "
-              "Please use bulk the first time".format(
-                  td.name),
-              file=sys.stderr)
+        logger.critcal("Can't find sync info for table %s. "
+                       "Please use bulk the first time",
+                       td.name)
         return
     lastsync = line[0]  # type is datetime
 
@@ -46,7 +46,7 @@ def download_changes(td):
             td.name,
             lastsync.strftime('%Y-%m-%dT%H:%M:%SZ')  # UTC
             )
-    print(soql, file=sys.stderr)
+    logger.debug("%s", soql)
     qry = query(soql, include_deleted=True)
     output = None
     csvfilename = None
@@ -70,6 +70,7 @@ def download_changes(td):
 
 
 def pg_merge_update(td, tmp_tablename):
+    logger = logging.getLogger(__name__)
     pg = get_pg()
     cursor = pg.cursor()
 
@@ -96,7 +97,7 @@ def pg_merge_update(td, tmp_tablename):
             excluded_quoted_field_names=excluded_quoted_field_names,
             )
     cursor.execute(sql)
-    print("pg INSERT/UPDATE rowcount:", cursor.rowcount, file=sys.stderr)
+    logger.info("pg INSERT/UPDATE rowcount: %s", cursor.rowcount)
 
     sql = '''DELETE FROM {quoted_table_dest}
              WHERE {id} IN (
@@ -110,7 +111,7 @@ def pg_merge_update(td, tmp_tablename):
           id=postgres_escape_name('Id'),
           )
     cursor.execute(sql)
-    print("pg DELETE rowcount:", cursor.rowcount, file=sys.stderr)
+    logger.info("pg DELETE rowcount: %s", cursor.rowcount)
 
     sql = '''UPDATE sync.status
              SET syncuntil=(
@@ -128,12 +129,14 @@ def pg_merge_update(td, tmp_tablename):
 
 
 def sync_table(tablename):
+    logger = logging.getLogger(__name__)
+
     td = TableDesc(tablename)
     csvfilename = download_changes(td)
     if csvfilename is None:
-        print('No change in table', tablename, file=sys.stderr)
+        logger.info('No change in table %s', tablename)
         return
-    print('Downloaded to', csvfilename, file=sys.stderr)
+    logger.debug('Downloaded to %s', csvfilename)
 
     pg = get_pg()
     cursor = pg.cursor()
@@ -148,7 +151,7 @@ def sync_table(tablename):
     sql = get_pgsql_import(td, csvfilename, tmp_tablename)
     with open(csvfilename) as file:
         cursor.copy_expert(sql, file)
-        print("pg COPY rowcount:", cursor.rowcount, file=sys.stderr)
+        logger.info("pg COPY rowcount: %s", cursor.rowcount)
     pg.commit()
 
     pg_merge_update(td, tmp_tablename)
@@ -166,5 +169,8 @@ if __name__ == '__main__':
             'table',
             help='the table name to refresh')
     args = parser.parse_args()
+
+    logging.basicConfig(filename=config.LOGFILE,
+            format=config.LOGFORMAT, level=config.LOGLEVEL)
 
     sync_table(args.table)

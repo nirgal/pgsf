@@ -1,9 +1,10 @@
 #!/usr/bin/python3
-import argparse
-import json
-import sys
 
-from config import DB_RENAME_ID, JOB_DIR
+import argparse
+import logging
+import json
+
+import config
 from createtable import postgres_escape_name, postgres_table_name
 from tabledesc import TableDesc
 
@@ -16,7 +17,7 @@ def get_pgsql_import(tabledesc, csv_file_name, target_tablename=None):
         quoted_fields = header.split(',')
         fields = [quoted_field.strip('"') for quoted_field in quoted_fields]
 
-        if DB_RENAME_ID:
+        if config.DB_RENAME_ID:
             fields = [field if field != 'Id' else 'SfId'
                       for field in fields]
 
@@ -38,9 +39,11 @@ def get_pgsql_import(tabledesc, csv_file_name, target_tablename=None):
 
 
 def job_csv_to_postgres(job):
-    with open(JOB_DIR + '/' + job + '/' + 'status.json') as file:
+    logger = logging.getLogger(__name__)
+
+    with open(config.JOB_DIR + '/' + job + '/' + 'status.json') as file:
         job_status = json.loads(file.read())
-    with open(JOB_DIR + '/' + job + '/' + 'batches.json') as file:
+    with open(config.JOB_DIR + '/' + job + '/' + 'batches.json') as file:
         batches = json.loads(file.read())
 
     table_name = job_status['object']
@@ -48,14 +51,14 @@ def job_csv_to_postgres(job):
 
     successfull_csv_files = [
             '{}/{}/{}.{}'.format(
-                JOB_DIR, job, batch['id'], job_status['contentType'])
+                config.JOB_DIR, job, batch['id'], job_status['contentType'])
             for batch in batches
             if batch['state'] == 'Completed'
             ]
 
     sql = get_pgsql_import(td, successfull_csv_files[0])
 
-    print(sql, file=sys.stderr)
+    logger.debug('%s', sql)
 
     from postgres import get_pg
     pg = get_pg()
@@ -63,7 +66,7 @@ def job_csv_to_postgres(job):
     for csv in successfull_csv_files:
         with open(csv) as file:
             cursor.copy_expert(sql, file)
-            print("rowcount:", cursor.rowcount, file=sys.stderr)
+            logger.debug("rowcount: %s", cursor.rowcount)
 
     cursor.execute("""
         INSERT INTO sync.status (tablename, syncuntil) VALUES(%s, %s);
@@ -79,5 +82,8 @@ if __name__ == '__main__':
             'job',
             help='Job id')
     args = parser.parse_args()
+
+    logging.basicConfig(filename=config.LOGFILE,
+            format=config.LOGFORMAT, level=config.LOGLEVEL)
 
     job_csv_to_postgres(args.job)

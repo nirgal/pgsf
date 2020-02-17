@@ -1,15 +1,15 @@
 #!/usr/bin/python3
 
 import argparse
+import logging
 import json
 import os
-import sys
 # from pprint import pprint
 from time import sleep
 
 import requests
 
-from config import JOB_DIR
+import config
 from salesforce import get_SalesforceBulk
 
 # def write_csv_from_csv(outputfile, tabledesc, inputresult, write_header):
@@ -44,6 +44,7 @@ from salesforce import get_SalesforceBulk
 
 
 def download(job, pool_time=5):
+    logger = logging.getLogger(__name__)
     bulk = get_SalesforceBulk()
 
     done = False
@@ -58,64 +59,57 @@ def download(job, pool_time=5):
             numberBatchesCompleted = int(job_status['numberBatchesCompleted'])
             numberBatchesFailed = int(job_status['numberBatchesFailed'])
             numberBatchesTotal = int(job_status['numberBatchesTotal'])
-            print("{total} batch: {queued} Queued, "
-                  "{inprogress} In Progress, "
-                  "{completed} Completed, "
-                  "{failed} Failed".format(
+            logger.info(
+                    "%(total)s batch: %(queued)s Queued, "
+                    "%(inprogress)s In Progress, "
+                    "%(completed)s Completed, "
+                    "%(failed) Failed.",
                     queued=numberBatchesQueued,
                     inprogress=numberBatchesInProgress,
                     completed=numberBatchesCompleted,
                     failed=numberBatchesFailed,
-                    total=numberBatchesTotal),
-                  file=sys.stderr)
+                    total=numberBatchesTotal)
             if numberBatchesQueued == 0 and numberBatchesInProgress == 0:
                 break
 
-            # print('.', end='', file=sys.stderr, flush=True)
         except requests.exceptions.ConnectionError:
             # At that point, a connection error is bad, but not fatal
             # Let's retry
             pass
-            # print('E', end='', file=sys.stderr, flush=True)
         sleep(pool_time)
-    print('', file=sys.stderr)
 
     try:
-        os.mkdir(JOB_DIR + '/' + job)
+        os.mkdir(config.JOB_DIR + '/' + job)
     except FileExistsError:
         pass  # Already exists? Good!
 
     job_status = bulk.job_status(job)
-    with open(JOB_DIR + '/' + job + '/' + 'status.json', 'w') as file:
+    with open(config.JOB_DIR + '/' + job + '/' + 'status.json', 'w') as file:
         file.write(json.dumps(job_status, indent=4))
 
     batches = bulk.get_batch_list(job)
-    with open(JOB_DIR + '/' + job + '/' + 'batches.json', 'w') as file:
+    with open(config.JOB_DIR + '/' + job + '/' + 'batches.json', 'w') as file:
         file.write(json.dumps(batches, indent=4))
 
     for batch in bulk.get_batch_list(job):
         batch_id = batch['id']
         if batch['state'] == 'NotProcessed':
-            print('Skipping batch {} in state "NotProcessed".'.format(
-                batch_id),
-                file=sys.stderr)
+            logger.debug('Skipping batch %s in state "NotProcessed".',
+                    batch_id)
             continue
-        filename = (JOB_DIR + '/' + job + '/' + batch_id + '.'
+        filename = (config.JOB_DIR + '/' + job + '/' + batch_id + '.'
                     + job_status['contentType'])
         with open(filename, 'w') as file:
-            print('Downloading batch', batch_id, end='',
-                  file=sys.stderr, flush=True)
+            logger.info('Downloading batch %s', batch_id)
             for chunk in bulk.get_all_results_for_query_batch(batch_id, job):
                 file.write(str(chunk.read(), encoding='utf-8'))
-                print('.', end='', file=sys.stderr, flush=True)
-            print('', file=sys.stderr)
 
     if job_status['state'] == 'Open':
-        print('Closing job', file=sys.stderr)
+        logger.info('Closing job')
         bulk.close_job(job)
         job_status = bulk.job_status(job)
         # Update the data after closing the job
-        with open(JOB_DIR + '/' + job + '/' + 'status.json', 'w') as file:
+        with open(config.JOB_DIR + '/' + job + '/' + 'status.json', 'w') as file:
             file.write(json.dumps(job_status, indent=4))
 
 
@@ -126,6 +120,9 @@ if __name__ == '__main__':
             'job',
             help='job id')
     args = parser.parse_args()
+
+    logging.basicConfig(filename=config.LOGFILE,
+            format=config.LOGFORMAT, level=config.LOGLEVEL)
 
     job = args.job
 

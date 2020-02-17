@@ -2,11 +2,12 @@
 
 import argparse
 import csv
-import sys
+import logging
 from collections import OrderedDict
 
 from salesforce import get_Salesforce
 
+logger = logging.getLogger(__name__)
 
 class TableDesc:
     def __init__(self, name):
@@ -69,10 +70,10 @@ class TableDesc:
                     self.__fields_cache[name]['IsIndexed'] = \
                             record['IsIndexed']
                 else:
-                    print('WARNING: Table {}, field {} '
-                          'is not available from describe'
-                          .format(self.name, name),
-                          file=sys.stderr)
+                    logger.warning(
+                            'Table %s, field %s '
+                            'is not available from describe',
+                            self.name, name)
             return self.__fields_cache
 
     def get_sync_field_names(self):
@@ -185,5 +186,8 @@ if __name__ == '__main__':
             'table',
             help='table name')
     args = parser.parse_args()
+
+    logging.basicConfig(filename=config.LOGFILE,
+            format=config.LOGFORMAT, level=config.LOGLEVEL)
 
     TableDesc(args.table).make_csv_fieldlist()
