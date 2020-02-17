@@ -2,6 +2,7 @@
 
 import argparse
 import csv
+import sys
 from collections import OrderedDict
 
 from salesforce import get_Salesforce
@@ -70,7 +71,8 @@ class TableDesc:
                 else:
                     print('WARNING: Table {}, field {} '
                           'is not available from describe'
-                          .format(self.name, name))
+                          .format(self.name, name),
+                          file=sys.stderr)
             return self.__fields_cache
 
     def get_sync_field_names(self):
