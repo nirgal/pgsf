@@ -63,12 +63,13 @@ def download(job, pool_time=5):
                     "%(total)s batch: %(queued)s Queued, "
                     "%(inprogress)s In Progress, "
                     "%(completed)s Completed, "
-                    "%(failed) Failed.",
-                    queued=numberBatchesQueued,
-                    inprogress=numberBatchesInProgress,
-                    completed=numberBatchesCompleted,
-                    failed=numberBatchesFailed,
-                    total=numberBatchesTotal)
+                    "%(failed)s Failed.", {
+                        'queued': numberBatchesQueued,
+                        'inprogress': numberBatchesInProgress,
+                        'completed': numberBatchesCompleted,
+                        'failed': numberBatchesFailed,
+                        'total': numberBatchesTotal,
+                    })
             if numberBatchesQueued == 0 and numberBatchesInProgress == 0:
                 break
 
