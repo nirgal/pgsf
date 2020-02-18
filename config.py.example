@@ -3,8 +3,8 @@ CREDIDENTIALS = {
         'password': 'mypassword',
         'security_token': 'XXXXXXXXXXXXXXXXXXXXXXXXX',
         'sandbox': True,
-        'version': '47.0',
 }
+SF_API_VERSION = '47.0'
 
 DB_NAME = 'localdb'  # Local DB name
 
