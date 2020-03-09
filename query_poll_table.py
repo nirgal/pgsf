@@ -33,9 +33,9 @@ def download_changes(td):
                    (td.name,))
     line = cursor.fetchone()
     if line is None:
-        logger.critcal("Can't find sync info for table %s. "
-                       "Please use bulk the first time",
-                       td.name)
+        logger.critical("Can't find sync info for table %s. "
+                        "Please use bulk the first time",
+                        td.name)
         return
     lastsync = line[0]  # type is datetime
 
