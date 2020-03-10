@@ -4,12 +4,10 @@ import argparse
 import csv
 import io
 import logging
-import sys
 
 import config
 from salesforce import get_SalesforceBulk
 from tabledesc import TableDesc
-
 
 csvdialect = {
     'delimiter': ',',
@@ -21,6 +19,7 @@ csvdialect = {
     'skipinitialspace': False,
     'strict': True,
 }
+
 
 def csv_reader(csvfilename):
     """
@@ -34,6 +33,7 @@ def csv_reader(csvfilename):
             writer = csv.writer(buf, **csvdialect)
             writer.writerow(line)
             yield buf.getvalue()
+
 
 def csv_split(csvfilename, max_size=10000000, max_records=10000):
     """
@@ -53,7 +53,9 @@ def csv_split(csvfilename, max_size=10000000, max_records=10000):
             continue
         if (chunk_nb_lines >= max_records
            or len(buff) + len(line) >= max_size):
-            logger.debug("Chunk with %s bytes, %s lines", len(buff), chunk_nb_lines)
+            logger.debug(
+                    "Chunk with %s bytes, %s lines",
+                    len(buff), chunk_nb_lines)
             yield io.StringIO(buff)
             buff = headers
             chunk_nb_lines = 1
@@ -86,9 +88,6 @@ if __name__ == '__main__':
     parser.add_argument(
             'csvfile',
             help='file to upload')
-    #parser.add_argument(
-    #        'table',
-    #        help='local table name to upload')
     args = parser.parse_args()
 
     logging.basicConfig(
@@ -98,11 +97,5 @@ if __name__ == '__main__':
 
     td = TableDesc(args.sftable)
     csvfilename = args.csvfile
-
-    #for chunk in csv_split(csvfilename):
-    #    data = chunk.read()
-    #    print('Chunk starts')
-    #    print(data, end='')
-    #    print('Chunk ends')
 
     upload_csv(td, csvfilename)
