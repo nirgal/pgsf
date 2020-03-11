@@ -5,10 +5,14 @@ import csv
 import io
 import logging
 
+import requests
+
 import config
 from salesforce import get_SalesforceBulk
 from tabledesc import TableDesc
 
+DEFAULT_MAX_UPLOAD_SIZE = 10000000
+DEFAULT_MAX_UPLOAD_RECORDS = 10000
 csvdialect = {
     'delimiter': ',',
     'doublequote': True,
@@ -35,7 +39,10 @@ def csv_reader(csvfilename):
             yield buf.getvalue()
 
 
-def csv_split(csvfilename, max_size=10000000, max_records=10000):
+def csv_split(
+        csvfilename,
+        max_size=DEFAULT_MAX_UPLOAD_SIZE,
+        max_records=DEFAULT_MAX_UPLOAD_RECORDS):
     """
     Takes a postgresql csv file (commas, headers, escape " as "")
     Yield readable StringIOs with the same format, and a maximum size
@@ -65,15 +72,25 @@ def csv_split(csvfilename, max_size=10000000, max_records=10000):
     yield io.StringIO(buff)
 
 
-def upload_csv(tabledesc, csvfilename):
+def upload_csv(
+        tabledesc,
+        csvfilename,
+        max_size=DEFAULT_MAX_UPLOAD_SIZE,
+        max_records=DEFAULT_MAX_UPLOAD_RECORDS):
     logger = logging.getLogger(__name__)
 
     bulk = get_SalesforceBulk()
     jobid = bulk.create_update_job(tabledesc.name, contentType='CSV')
 
-    for chunk in csv_split(csvfilename):
+    for chunk in csv_split(csvfilename, max_size, max_records):
         batchid = bulk.post_batch(jobid, chunk)
-        bulk.wait_for_batch(jobid, batchid)
+        while True:
+            try:
+                bulk.wait_for_batch(jobid, batchid)
+            except requests.exceptions.ConnectionError as e:
+                logger.error('wait_for_batch failed, retrying...: %s', e)
+            else:
+                break
         logger.debug("%s", bulk.get_batch_results(batchid))
 
     bulk.close_job(jobid)
@@ -81,7 +98,27 @@ def upload_csv(tabledesc, csvfilename):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description='Upload a table to salesforce')
+        description='Upload a scv file into a salesforce table',
+        epilog='This uses a single Salesforce Bulk V1 "update" API.'
+               ' The CSV file is cut in chunks.'
+               ' Each chunk is submited as a bacth in the job.'
+        )
+    parser.add_argument(
+        '--max-upload-size',
+        type=int,
+        default=DEFAULT_MAX_UPLOAD_SIZE,
+        help='cut csv file in chunks no larger than %(metavar)s bytes.'
+             ' default=%(default)s',
+        metavar='SIZE',
+        )
+    parser.add_argument(
+        '--max-upload-records',
+        type=int,
+        default=DEFAULT_MAX_UPLOAD_RECORDS,
+        help='cut csv file in chunks with no more than %(metavar)s records.'
+             ' default=%(default)s',
+        metavar='LIMIT',
+        )
     parser.add_argument(
             'sftable',
             help='salesforce table name')
@@ -98,4 +135,8 @@ if __name__ == '__main__':
     td = TableDesc(args.sftable)
     csvfilename = args.csvfile
 
-    upload_csv(td, csvfilename)
+    upload_csv(
+            td,
+            csvfilename,
+            max_size=args.max_upload_size,
+            max_records=args.max_upload_records)
