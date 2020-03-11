@@ -4,6 +4,7 @@ import argparse
 import csv
 import io
 import logging
+import time
 
 import requests
 
@@ -89,6 +90,7 @@ def upload_csv(
                 bulk.wait_for_batch(jobid, batchid)
             except requests.exceptions.ConnectionError as e:
                 logger.error('wait_for_batch failed, retrying...: %s', e)
+                time.sleep(1)
             else:
                 break
         logger.debug("%s", bulk.get_batch_results(batchid))
