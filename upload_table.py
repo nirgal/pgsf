@@ -57,7 +57,7 @@ def csv_split(
         if headers is None:
             headers = line
             buff = headers
-            chunk_nb_lines = 1
+            chunk_nb_lines = 0
             continue
         if (chunk_nb_lines >= max_records
            or len(buff) + len(line) >= max_size):
@@ -66,7 +66,7 @@ def csv_split(
                     len(buff), chunk_nb_lines)
             yield io.StringIO(buff)
             buff = headers
-            chunk_nb_lines = 1
+            chunk_nb_lines = 0
         buff += line
         chunk_nb_lines += 1
     logger.debug("Chunk with %s bytes, %s lines", len(buff), chunk_nb_lines)
