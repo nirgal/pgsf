@@ -6,7 +6,7 @@ Requirements
 ============
 
 This tools requires
-python3 python3-psycopg2
+python3 python3-psycopg2 python3-six python3-requests python3-unicodecsv
 
 You also need python packages ``simple_salesforce`` and ``salesforce_bulk`` available from:
 
