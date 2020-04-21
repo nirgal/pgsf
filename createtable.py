@@ -21,7 +21,9 @@ def postgres_type_raw(field):
         return 'TIMESTAMP'
     elif sftype == 'boolean':
         return 'BOOLEAN'
-    elif sftype in ('currency', 'double', 'percent'):
+    elif sftype == 'currency':
+        return 'NUMERIC({}, {})'.format(field['precision'], field['scale'])
+    elif sftype in ('double', 'percent'):
         return 'DOUBLE PRECISION'
     else:
         return '"{}" NOT IMPLEMENTED '.format(sftype)
