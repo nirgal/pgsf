@@ -148,6 +148,7 @@ class TableDesc:
         with open(filename, 'x') as f:
             f.write('"FieldName", "Import", "Indexed", "Note"\n')  # header
             for fieldname, fieldinfo in sf_fields.items():
+                logging.debug("Describing field %s : %s", fieldname, fieldinfo)
                 if default == 'minimal':
                     if fieldname in default_import_fields:
                         isimport = '1'
