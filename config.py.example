@@ -6,6 +6,10 @@ CREDIDENTIALS = {
 }
 SF_API_VERSION = '47.0'
 
+DB_HOST = ''
+DB_PORT = ''
+DB_USER = ''
+DB_PASSWORD = ''
 DB_NAME = 'localdb'  # Local DB name
 
 DB_SCHEMA = 'salesforce'  # Set to None to use public schema

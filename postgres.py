@@ -1,11 +1,29 @@
 #!/usr/bin/python3
 
+import argparse
 import logging
 
 import psycopg2
 
-from config import DB_NAME
+from config import DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME
 
+
+def connect_string():
+    connect_params = {}
+    if DB_HOST:
+        connect_params['host'] = DB_HOST
+    if DB_PORT:
+        connect_params['post'] = DB_PORT
+    if DB_USER:
+        connect_params['user'] = DB_USER
+    if DB_PASSWORD:
+        connect_params['password'] = DB_PASSWORD
+    if DB_NAME:
+        connect_params['dbname'] = DB_NAME
+    connect_string = ' '.join(
+            k + '=' + str(v)
+            for k, v in connect_params.items())
+    return connect_string
 
 def get_pg():
     '''
@@ -18,5 +36,12 @@ def get_pg():
     except NameError:
         logger = logging.getLogger(__name__)
         logger.debug('Opening new connection to postgres')
-        __pg_connection = psycopg2.connect("dbname={}".format(DB_NAME))
+        __pg_connection = psycopg2.connect(connect_string())
         return __pg_connection
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        description='print connection string to stdout')
+
+    args = parser.parse_args()
+    print(connect_string())
