@@ -199,5 +199,9 @@ if __name__ == '__main__':
         pg = get_pg()
         cursor = pg.cursor()
         for line in sql:
-            cursor.execute(line)
+            try:
+                cursor.execute(line)
+            except (Exception, psycopg2.ProgrammingError) as e:
+                logging.error('Error while executing '+line)
+                raise e
         pg.commit()
