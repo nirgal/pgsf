@@ -12,7 +12,7 @@ def postgres_type_raw(field):
     if sftype in (
             'email', 'encryptedstring', 'id', 'multipicklist',
             'picklist', 'phone', 'reference', 'string', 'textarea', 'url'):
-        return 'VARCHAR({})'.format(field['byteLength'])
+        return 'VARCHAR({})'.format(field['length'])
     elif sftype == 'int':
         return 'INTEGER'
     elif sftype == 'date':
@@ -201,5 +201,9 @@ if __name__ == '__main__':
         pg = get_pg()
         cursor = pg.cursor()
         for line in sql:
-            cursor.execute(line)
+            try:
+                cursor.execute(line)
+            except (Exception, psycopg2.ProgrammingError) as e:
+                logging.error('Error while executing '+line)
+                raise e
         pg.commit()

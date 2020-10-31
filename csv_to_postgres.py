@@ -49,6 +49,15 @@ def job_csv_to_postgres(job):
     table_name = job_status['object']
     td = TableDesc(table_name)
 
+    from postgres import get_pg
+    pg = get_pg()
+    cursor = pg.cursor()
+
+    sql = "TRUNCATE TABLE {quoted_table_name}".format(
+        quoted_table_name=postgres_table_name(table_name));
+    logger.debug(sql);
+    cursor.execute(sql);
+
     successfull_csv_files = [
             '{}/{}/{}.{}'.format(
                 config.JOB_DIR, job, batch['id'], job_status['contentType'])
@@ -60,9 +69,6 @@ def job_csv_to_postgres(job):
 
     logger.debug('%s', sql)
 
-    from postgres import get_pg
-    pg = get_pg()
-    cursor = pg.cursor()
     for csv in successfull_csv_files:
         with open(csv) as file:
             cursor.copy_expert(sql, file)
