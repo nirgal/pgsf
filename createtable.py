@@ -25,6 +25,8 @@ def postgres_type_raw(field):
         return 'NUMERIC({}, {})'.format(field['precision'], field['scale'])
     elif sftype in ('double', 'percent'):
         return 'DOUBLE PRECISION'
+    elif sftype == 'anyType':
+        return 'TEXT'
     else:
         return '"{}" NOT IMPLEMENTED '.format(sftype)
 
@@ -43,7 +45,7 @@ def postgres_json_to_csv(field, value):
         return ''
     if sftype in (
             'email', 'encryptedstring', 'id', 'multipicklist',
-            'picklist', 'phone', 'reference', 'string', 'textarea', 'url'):
+            'picklist', 'phone', 'reference', 'string', 'textarea', 'url', 'anyType'):
         return csv_quote(value)
     elif sftype == 'int':
         return str(value)
