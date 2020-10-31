@@ -12,7 +12,7 @@ def postgres_type_raw(field):
     if sftype in (
             'email', 'encryptedstring', 'id', 'multipicklist',
             'picklist', 'phone', 'reference', 'string', 'textarea', 'url'):
-        return 'VARCHAR({})'.format(field['byteLength'])
+        return 'VARCHAR({})'.format(field['length'])
     elif sftype == 'int':
         return 'INTEGER'
     elif sftype == 'date':
