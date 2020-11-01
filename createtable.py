@@ -10,9 +10,11 @@ from tabledesc import TableDesc
 def postgres_type_raw(field):
     sftype = field['type']
     if sftype in (
-            'email', 'encryptedstring', 'id', 'multipicklist',
-            'picklist', 'phone', 'reference', 'string', 'textarea', 'url'):
+            'email', 'encryptedstring', 'id',
+            'phone', 'reference', 'string', 'textarea', 'url'):
         return 'VARCHAR({})'.format(field['length'])
+    elif sftype in ('picklist', 'multipicklist'):
+        return 'TEXT'  # size is not reliable
     elif sftype == 'int':
         return 'INTEGER'
     elif sftype == 'date':
@@ -197,7 +199,7 @@ if __name__ == '__main__':
         for line in sql:
             print(line)
     else:
-        from postgres import get_pg
+        from postgres import get_pg, psycopg2
         pg = get_pg()
         cursor = pg.cursor()
         for line in sql:
