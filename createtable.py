@@ -33,36 +33,6 @@ def postgres_type_raw(field):
         return '"{}" NOT IMPLEMENTED '.format(sftype)
 
 
-def postgres_json_to_csv(field, value):
-    '''
-    Given a field, this converts a json value returned by SF query into a csv
-    compatible value.
-    '''
-    def csv_quote(value):
-        # return '"' + value.replace('\\', '\\\\').replace('"', '\\"') + '"'
-        return '"' + value.replace('"', '""') + '"'
-
-    sftype = field['type']
-    if value is None:
-        return ''
-    if sftype in (
-            'email', 'encryptedstring', 'id', 'multipicklist',
-            'picklist', 'phone', 'reference', 'string', 'textarea', 'url', 'anyType'):
-        return csv_quote(value)
-    elif sftype == 'int':
-        return str(value)
-    elif sftype == 'date':
-        return str(value)
-    elif sftype == 'datetime':
-        return str(value)  # 2019-11-18T15:28:14.000Z TODO check
-    elif sftype == 'boolean':
-        return 't' if value else 'f'
-    elif sftype in ('currency', 'double', 'percent'):
-        return str(value)
-    else:
-        return '"{}" NOT IMPLEMENTED '.format(sftype)
-
-
 def postgres_escape_str(s):
     return "'" + s.replace("'", "''") + "'"
 
