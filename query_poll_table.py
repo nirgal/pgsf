@@ -3,7 +3,7 @@
 import argparse
 import logging
 from datetime import datetime
-
+from psycopg2 import DatabaseError
 import config
 from createtable import (postgres_escape_name, postgres_escape_str,
                          postgres_table_name)
@@ -105,8 +105,9 @@ def pg_merge_update(td, tmp_tablename):
     cursor = pg.cursor()
 
     fieldnames = td.get_sync_field_names()
+    has_isdeleted = 'IsDeleted' in fieldnames
     quoted_table_dest = postgres_table_name(td.name)
-    quoted_table_src = postgres_table_name(tmp_tablename)
+    quoted_table_src = postgres_table_name(tmp_tablename, schema='')
     quoted_field_names = ','.join(
             [postgres_escape_name(f) for f in fieldnames])
     excluded_quoted_field_names = ','.join(
@@ -115,7 +116,7 @@ def pg_merge_update(td, tmp_tablename):
              ( {quoted_field_names} )
              SELECT {quoted_field_names}
              FROM {quoted_table_src}
-             WHERE NOT "IsDeleted"
+             {wherenotdeleted}
              ON CONFLICT ( "Id" )
              DO UPDATE
                  SET ( {quoted_field_names} )
@@ -125,23 +126,25 @@ def pg_merge_update(td, tmp_tablename):
             quoted_table_src=quoted_table_src,
             quoted_field_names=quoted_field_names,
             excluded_quoted_field_names=excluded_quoted_field_names,
+            wherenotdeleted='WHERE NOT "IsDeleted"' if has_isdeleted else ''
             )
     cursor.execute(sql)
     logger.info("pg INSERT/UPDATE rowcount: %s", cursor.rowcount)
 
-    sql = '''DELETE FROM {quoted_table_dest}
-             WHERE {id} IN (
-                 SELECT {id}
-                 FROM {quoted_table_src}
-                 WHERE "IsDeleted"
-                 )
-          '''.format(
-          quoted_table_dest=quoted_table_dest,
-          quoted_table_src=quoted_table_src,
-          id=postgres_escape_name('Id'),
-          )
-    cursor.execute(sql)
-    logger.info("pg DELETE rowcount: %s", cursor.rowcount)
+    if has_isdeleted:
+        sql = '''DELETE FROM {quoted_table_dest}
+                 WHERE {id} IN (
+                     SELECT {id}
+                     FROM {quoted_table_src}
+                     WHERE "IsDeleted"
+                     )
+              '''.format(
+              quoted_table_dest=quoted_table_dest,
+              quoted_table_src=quoted_table_src,
+              id=postgres_escape_name('Id'),
+              )
+        cursor.execute(sql)
+        logger.info("pg DELETE rowcount: %s", cursor.rowcount)
 
     sql = '''UPDATE sync.status
              SET syncuntil=(
@@ -172,22 +175,21 @@ def sync_table(tablename):
     cursor = pg.cursor()
 
     tmp_tablename = 'tmp_' + tablename
-    sql = 'CREATE TABLE {} ( LIKE {} )'.format(
-        postgres_table_name(tmp_tablename),
+    sql = 'CREATE TEMPORARY TABLE {} ( LIKE {} )'.format(
+        postgres_table_name(tmp_tablename, schema=''),
         postgres_table_name(tablename))
 
     cursor.execute(sql)
 
-    sql = get_pgsql_import(td, csvfilename, tmp_tablename)
+    sql = get_pgsql_import(td, csvfilename, tmp_tablename, schema='')
     with open(csvfilename) as file:
         cursor.copy_expert(sql, file)
         logger.info("pg COPY rowcount: %s", cursor.rowcount)
-    pg.commit()
 
     pg_merge_update(td, tmp_tablename)
 
     sql = 'DROP TABLE {}'.format(
-        postgres_table_name(tmp_tablename))
+        postgres_table_name(tmp_tablename, schema=''))
     cursor.execute(sql)
     pg.commit()
 

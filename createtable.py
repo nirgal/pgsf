@@ -45,9 +45,17 @@ def postgres_escape_name(name):
         return name
 
 
-def postgres_table_name(name):
-    if config.DB_SCHEMA is not None:
-        result = postgres_escape_name(config.DB_SCHEMA)
+def postgres_table_name(name, schema=None):
+    """
+    leave schema empty for using config
+    usage is temporary tables ( psycopg2.errors.InvalidTableDefinition:
+            cannot create temporary relation in non-temporary schema)
+    """
+    if schema is None:
+        schema = config.DB_SCHEMA
+
+    if schema:
+        result = postgres_escape_name(schema)
         result += '.'
     else:
         result = ''

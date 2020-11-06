@@ -9,7 +9,11 @@ from createtable import postgres_escape_name, postgres_table_name
 from tabledesc import TableDesc
 
 
-def get_pgsql_import(tabledesc, csv_file_name, target_tablename=None):
+def get_pgsql_import(tabledesc, csv_file_name, target_tablename=None, schema=None):
+    """
+    schema is set to '' for temporary tables
+    else the config is used: use None as a parameter
+    """
     if target_tablename is None:
         target_tablename = tabledesc.name
     with open(csv_file_name) as f:
@@ -33,7 +37,7 @@ def get_pgsql_import(tabledesc, csv_file_name, target_tablename=None):
             force_null = ''
         return """COPY {quoted_table_name} ({fields})
                   FROM STDIN WITH (FORMAT csv, HEADER{force_null})""".format(
-                quoted_table_name=postgres_table_name(target_tablename),
+                quoted_table_name=postgres_table_name(target_tablename, schema),
                 fields=','.join([postgres_escape_name(f) for f in fields]),
                 force_null=force_null)
 
