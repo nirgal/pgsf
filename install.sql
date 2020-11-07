@@ -1,9 +1,9 @@
 -- Schema where the Salesforce data will be replicated
-CREATE SCHEMA salesforce;
+create schema salesforce;
 
 -- Schema with synchronisation information (for internal use)
-CREATE SCHEMA sync;
-CREATE TABLE sync.status (
-	tablename VARCHAR(128) PRIMARY KEY,
-	syncuntil TIMESTAMP  -- UTC
+create schema sync;
+create table sync.status (
+	tablename varchar(70) primary key,  -- see EntityDefinition.QualifiedApiName
+	syncuntil timestamp  -- UTC
 );
