@@ -20,5 +20,5 @@ DB_RENAME_ID = True  # Set to true to rename salesforce "Id" column to "SfId"
 JOB_DIR="jobs"
 
 LOGFILE = 'log/pgsf.log'
-LOGFORMAT = '%(asctime)-15s - %(name)s - %(levelname)s - %(message)s'
+LOGFORMAT = '%(asctime)-15s - %(levelname)s - {} - %(name)s - %(message)s'
 LOGLEVEL = 10  # Debug

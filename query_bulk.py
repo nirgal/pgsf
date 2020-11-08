@@ -64,7 +64,7 @@ if __name__ == '__main__':
 
     logging.basicConfig(
             filename=config.LOGFILE,
-            format=config.LOGFORMAT,
+            format=config.LOGFORMAT.format('query_bulk '+args.table),
             level=config.LOGLEVEL)
 
     if args.pk_chunking:
@@ -81,3 +81,4 @@ if __name__ == '__main__':
             pk_chunking=pk_chunking)
 
     logger.info('Created job %s', job)
+    print('Created job %s', job)

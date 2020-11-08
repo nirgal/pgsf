@@ -169,7 +169,7 @@ if __name__ == '__main__':
 
     logging.basicConfig(
             filename=config.LOGFILE,
-            format=config.LOGFORMAT,
+            format=config.LOGFORMAT.format('createtable '+args.table),
             level=config.LOGLEVEL)
 
     sql = get_pgsql_create(args.table)

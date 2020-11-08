@@ -192,7 +192,7 @@ if __name__ == '__main__':
 
     logging.basicConfig(
             filename=config.LOGFILE,
-            format=config.LOGFORMAT,
+            format=config.LOGFORMAT.format('tabledesc '+args.table),
             level=config.LOGLEVEL)
 
     TableDesc(args.table).make_csv_fieldlist()

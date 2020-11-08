@@ -131,7 +131,7 @@ if __name__ == '__main__':
 
     logging.basicConfig(
             filename=config.LOGFILE,
-            format=config.LOGFORMAT,
+            format=config.LOGFORMAT.format('upload_table '+args.sftable+' '+args.csvfile),
             level=config.LOGLEVEL)
 
     td = TableDesc(args.sftable)

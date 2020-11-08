@@ -95,7 +95,7 @@ if __name__ == '__main__':
 
     logging.basicConfig(
             filename=config.LOGFILE,
-            format=config.LOGFORMAT,
+            format=config.LOGFORMAT.format('query'),
             level=config.LOGLEVEL)
 
     if args.count:

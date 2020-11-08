@@ -125,7 +125,7 @@ if __name__ == '__main__':
 
     logging.basicConfig(
             filename=config.LOGFILE,
-            format=config.LOGFORMAT,
+            format=config.LOGFORMAT.format('download '+args.job),
             level=config.LOGLEVEL)
 
     job = args.job

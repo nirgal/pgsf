@@ -204,7 +204,7 @@ if __name__ == '__main__':
 
     logging.basicConfig(
             filename=config.LOGFILE,
-            format=config.LOGFORMAT,
+            format=config.LOGFORMAT.format('query_poll_table '+args.table),
             level=config.LOGLEVEL)
 
     sync_table(args.table)

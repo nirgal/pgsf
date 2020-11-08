@@ -95,7 +95,7 @@ if __name__ == '__main__':
 
     logging.basicConfig(
             filename=config.LOGFILE,
-            format=config.LOGFORMAT,
+            format=config.LOGFORMAT.format('csv_to_postgres '+args.job),
             level=config.LOGLEVEL)
 
     job_csv_to_postgres(args.job)
