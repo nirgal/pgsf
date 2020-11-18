@@ -81,4 +81,4 @@ if __name__ == '__main__':
             pk_chunking=pk_chunking)
 
     logger.info('Created job %s', job)
-    print('Created job %s', job)
+    print('Created job {}'.format(job))
