@@ -79,7 +79,12 @@ def job_csv_to_postgres(job):
             logger.debug("rowcount: %s", cursor.rowcount)
 
     cursor.execute("""
-        INSERT INTO sync.status (tablename, syncuntil) VALUES(%s, %s);
+        INSERT INTO sync.status (tablename, syncuntil)
+        VALUES(%s, %s)
+        ON CONFLICT (tablename)
+        DO
+            UPDATE
+            SET syncuntil=EXCLUDED.syncuntil
         """,
                    (table_name, job_status['systemModstamp']))
     pg.commit()
