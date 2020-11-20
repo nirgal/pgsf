@@ -50,7 +50,7 @@ def postgres_json_to_csv(field, value):
         return '"{}" NOT IMPLEMENTED '.format(sftype)
 
 
-def download_changes(td):
+def download_changes(td, use_createddate=False):
     '''
     td is a tabledesc object
     returns the name of the csvfile where the changes where downloaded.
@@ -70,9 +70,10 @@ def download_changes(td):
         return
     lastsync = line[0]  # type is datetime
 
-    soql = "SELECT {} FROM {} WHERE SystemModStamp>{}".format(
+    soql = "SELECT {} FROM {} WHERE {}>{}".format(
             ','.join(fieldnames),
             td.name,
+            'CreatedDate' if use_createddate else 'SystemModStamp',
             lastsync.strftime('%Y-%m-%dT%H:%M:%SZ')  # UTC
             )
     logger.debug("%s", soql)
@@ -157,7 +158,7 @@ def mark_synced(td, timestamp):
         raise Error("UPDATE sync.status failed")
 
 
-def sync_table(tablename):
+def sync_table(tablename, use_createddate=False):
     logger = logging.getLogger(__name__)
     start_time = datetime.utcnow() - timedelta(seconds=SAFETY_SYNC_EXTRA)
 
@@ -165,7 +166,7 @@ def sync_table(tablename):
     cursor = pg.cursor()
 
     td = TableDesc(tablename)
-    csvfilename = download_changes(td)
+    csvfilename = download_changes(td, use_createddate)
     if csvfilename is None:
         logger.info('No change in table %s', tablename)
     else:
@@ -190,6 +191,7 @@ def sync_table(tablename):
         cursor.execute(sql)
 
     mark_synced(td, start_time)
+
     pg.commit()
 
 
@@ -199,6 +201,11 @@ if __name__ == '__main__':
     parser.add_argument(
             'table',
             help='the table name to refresh')
+    parser.add_argument(
+            '--use-createddate',
+            action='store_true',
+            help='Use CreatedDate instead of SystemModStamp for'
+                 ' detecting changes')
     args = parser.parse_args()
 
     logging.basicConfig(
@@ -206,4 +213,4 @@ if __name__ == '__main__':
             format=config.LOGFORMAT.format('query_poll_table '+args.table),
             level=config.LOGLEVEL)
 
-    sync_table(args.table)
+    sync_table(args.table, args.use_createddate)
