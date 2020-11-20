@@ -99,7 +99,7 @@ def postgres_coldef_from_sffield(field):
                             'DOUBLE PRECISION'),
             ]
     pgtype = postgres_type_raw(field)
-    if field_name == 'Id':
+    if field_name == 'Id' or field_name == 'DurableId':
         pgtype += ' PRIMARY KEY'
     else:
         if not field['nillable']:
@@ -135,8 +135,8 @@ def get_pgsql_create(table_name):
 
     indexed_fields_names = tabledesc.get_indexed_sync_field_names()
     for field_name, field in sync_fields.items():
-        if field_name == 'Id':
-            continue  # primary key already there
+        if field_name == 'Id' or field_name == 'DurableId':
+            continue  # primary key already indexed
         if field_name not in indexed_fields_names:
             continue
         if field.get('IsIndexed'):

@@ -151,11 +151,16 @@ class TableDesc:
                 logging.debug("Describing field %s : %s", fieldname, fieldinfo)
                 if default == 'minimal':
                     if fieldname in default_import_fields:
-                        isimport = '1'
+                        if fieldname == 'Id' and 'DurableId' in sf_fields.items():
+                            isimport = ''
+                        else:
+                            isimport = '1'
                     else:
                         isimport = ''
                 else:  # default default
                     if fieldinfo['calculated']:
+                        isimport = ''
+                    elif fieldname == 'Id' and 'DurableId' in sf_fields.items():
                         isimport = ''
                     else:
                         isimport = '1'
@@ -180,6 +185,15 @@ class TableDesc:
 
                 f.write('"{}",{},{},{}\n'.format(
                     fieldname, isimport, isindexed, ','.join(notes)))
+
+    def get_pk_fieldname(self):
+        sf_fields = self.get_sf_fields()
+        if 'DurableId' in sf_fields:
+            return 'DurableId'
+        elif 'Id' in sf_fields:
+            return 'Id'
+        else:
+            raise AssertionError('Could not find primary key for table {}'.format(self.name))
 
 
 if __name__ == '__main__':

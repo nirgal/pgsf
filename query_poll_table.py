@@ -126,7 +126,7 @@ def pg_merge_update(td, tmp_tablename):
              SELECT {quoted_field_names}
              FROM {quoted_table_src}
              {wherenotdeleted}
-             ON CONFLICT ( "Id" )
+             ON CONFLICT ( {id} )
              DO UPDATE
                  SET ( {quoted_field_names} )
                  = ( {excluded_quoted_field_names} )
@@ -134,6 +134,7 @@ def pg_merge_update(td, tmp_tablename):
             quoted_table_dest=quoted_table_dest,
             quoted_table_src=quoted_table_src,
             quoted_field_names=quoted_field_names,
+            id=postgres_escape_name(td.get_pk_fieldname()),
             excluded_quoted_field_names=excluded_quoted_field_names,
             wherenotdeleted='WHERE NOT "IsDeleted"' if has_isdeleted else ''
             )
@@ -150,7 +151,7 @@ def pg_merge_update(td, tmp_tablename):
               '''.format(
               quoted_table_dest=quoted_table_dest,
               quoted_table_src=quoted_table_src,
-              id=postgres_escape_name('Id'),
+              id=postgres_escape_name(td.get_pk_fieldname()),
               )
         cursor.execute(sql)
         logger.info("pg DELETE rowcount: %s", cursor.rowcount)
