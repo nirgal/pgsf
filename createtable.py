@@ -157,14 +157,14 @@ def get_pgsql_create(table_name):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description='make sql create table statements')
+        description='create postgresql table')
     parser.add_argument(
             '--dry-run',
             default=False, action='store_true',
-            help='only print the statement to stdout')
+            help='only print the sql statement to stdout')
     parser.add_argument(
             'table',
-            help='table to create in postgres')
+            help='table to create in postgresql')
     args = parser.parse_args()
 
     logging.basicConfig(
