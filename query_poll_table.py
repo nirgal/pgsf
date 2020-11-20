@@ -2,7 +2,7 @@
 
 import argparse
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from psycopg2 import DatabaseError
 import config
 from createtable import (postgres_escape_name, postgres_escape_str,
@@ -12,6 +12,7 @@ from postgres import get_pg
 from query import query
 from tabledesc import TableDesc
 
+SAFETY_SYNC_EXTRA = 1  # number of seconds we remove from now
 
 def create_csv_query_file(tablename):
     return '{}/query_{}_{}.csv'.format(
@@ -68,8 +69,6 @@ def download_changes(td):
                         td.name)
         return
     lastsync = line[0]  # type is datetime
-
-    pg.commit()
 
     soql = "SELECT {} FROM {} WHERE SystemModStamp>{}".format(
             ','.join(fieldnames),
@@ -146,51 +145,51 @@ def pg_merge_update(td, tmp_tablename):
         cursor.execute(sql)
         logger.info("pg DELETE rowcount: %s", cursor.rowcount)
 
-    sql = '''UPDATE sync.status
-             SET syncuntil=(
-                 SELECT max("SystemModstamp")
-                 FROM {quoted_table_dest}
-                 )
-             WHERE tablename={str_table_name}
-          '''.format(
-                quoted_table_dest=quoted_table_dest,
-                str_table_name=postgres_escape_str(td.name),
-                )
-    cursor.execute(sql)
 
-    pg.commit()
+def mark_synced(td, timestamp):
+    pg = get_pg()
+    cursor = pg.cursor()
+    cursor.execute(
+        'UPDATE sync.status SET syncuntil=%s WHERE tablename=%s', (
+            timestamp.strftime('%Y-%m-%dT%H:%M:%S.%f'),
+            td.name))
+    if cursor.rowcount != 1:
+        raise Error("UPDATE sync.status failed")
 
 
 def sync_table(tablename):
     logger = logging.getLogger(__name__)
+    start_time = datetime.utcnow() - timedelta(seconds=SAFETY_SYNC_EXTRA)
+
+    pg = get_pg()
+    cursor = pg.cursor()
 
     td = TableDesc(tablename)
     csvfilename = download_changes(td)
     if csvfilename is None:
         logger.info('No change in table %s', tablename)
-        return
-    logger.debug('Downloaded to %s', csvfilename)
+    else:
+        logger.debug('Downloaded to %s', csvfilename)
 
-    pg = get_pg()
-    cursor = pg.cursor()
+        tmp_tablename = 'tmp_' + tablename
+        sql = 'CREATE TEMPORARY TABLE {} ( LIKE {} )'.format(
+            postgres_table_name(tmp_tablename, schema=''),
+            postgres_table_name(tablename))
 
-    tmp_tablename = 'tmp_' + tablename
-    sql = 'CREATE TEMPORARY TABLE {} ( LIKE {} )'.format(
-        postgres_table_name(tmp_tablename, schema=''),
-        postgres_table_name(tablename))
+        cursor.execute(sql)
 
-    cursor.execute(sql)
+        sql = get_pgsql_import(td, csvfilename, tmp_tablename, schema='')
+        with open(csvfilename) as file:
+            cursor.copy_expert(sql, file)
+            logger.info("pg COPY rowcount: %s", cursor.rowcount)
 
-    sql = get_pgsql_import(td, csvfilename, tmp_tablename, schema='')
-    with open(csvfilename) as file:
-        cursor.copy_expert(sql, file)
-        logger.info("pg COPY rowcount: %s", cursor.rowcount)
+        pg_merge_update(td, tmp_tablename)
 
-    pg_merge_update(td, tmp_tablename)
+        sql = 'DROP TABLE {}'.format(
+            postgres_table_name(tmp_tablename, schema=''))
+        cursor.execute(sql)
 
-    sql = 'DROP TABLE {}'.format(
-        postgres_table_name(tmp_tablename, schema=''))
-    cursor.execute(sql)
+    mark_synced(td, start_time)
     pg.commit()
 
 
