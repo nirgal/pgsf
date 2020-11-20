@@ -136,7 +136,7 @@ class TableDesc:
         This downloads the field description from salesforce.
         default None means import all fields but formulas and compound fields.
         default 'minimal' means only import fields listed in
-        default_import_fields.
+            default_import_fields.
         '''
         default_import_fields = (
                 'Id', 'DurableId', 'CreatedDate', 'IsDeleted', 'SystemModstamp'

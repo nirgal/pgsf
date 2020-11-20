@@ -50,7 +50,7 @@ def postgres_json_to_csv(field, value):
         return '"{}" NOT IMPLEMENTED '.format(sftype)
 
 
-def download_changes(td, use_createddate=False):
+def download_changes(td):
     '''
     td is a tabledesc object
     returns the name of the csvfile where the changes where downloaded.
@@ -70,10 +70,19 @@ def download_changes(td, use_createddate=False):
         return
     lastsync = line[0]  # type is datetime
 
+    if 'SystemModStamp' in fieldnames:
+        timefield = 'SystemModStamp'
+    elif 'LastModifiedDate' in fieldnames:
+        timefield = 'LastModifiedDate'
+    elif 'CreatedDate' in fieldnames:
+        timefield = 'CreatedDate'
+    else:
+        raise AssertionError('No field to synchronize from. Tried SystemModStamp, LastModifiedDate and CreatedDate.')
+
     soql = "SELECT {} FROM {} WHERE {}>{}".format(
             ','.join(fieldnames),
             td.name,
-            'CreatedDate' if use_createddate else 'SystemModStamp',
+            timefield,
             lastsync.strftime('%Y-%m-%dT%H:%M:%SZ')  # UTC
             )
     logger.debug("%s", soql)
@@ -155,10 +164,10 @@ def mark_synced(td, timestamp):
             timestamp.strftime('%Y-%m-%dT%H:%M:%S.%f'),
             td.name))
     if cursor.rowcount != 1:
-        raise Error("UPDATE sync.status failed")
+        raise AssertionError("UPDATE sync.status failed")
 
 
-def sync_table(tablename, use_createddate=False):
+def sync_table(tablename):
     logger = logging.getLogger(__name__)
     start_time = datetime.utcnow() - timedelta(seconds=SAFETY_SYNC_EXTRA)
 
@@ -166,7 +175,7 @@ def sync_table(tablename, use_createddate=False):
     cursor = pg.cursor()
 
     td = TableDesc(tablename)
-    csvfilename = download_changes(td, use_createddate)
+    csvfilename = download_changes(td)
     if csvfilename is None:
         logger.info('No change in table %s', tablename)
     else:
@@ -201,11 +210,6 @@ if __name__ == '__main__':
     parser.add_argument(
             'table',
             help='the table name to refresh')
-    parser.add_argument(
-            '--use-createddate',
-            action='store_true',
-            help='Use CreatedDate instead of SystemModStamp for'
-                 ' detecting changes')
     args = parser.parse_args()
 
     logging.basicConfig(
@@ -213,4 +217,4 @@ if __name__ == '__main__':
             format=config.LOGFORMAT.format('query_poll_table '+args.table),
             level=config.LOGLEVEL)
 
-    sync_table(args.table, args.use_createddate)
+    sync_table(args.table)
