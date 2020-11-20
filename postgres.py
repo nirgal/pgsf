@@ -38,10 +38,3 @@ def get_pg():
         logger.debug('Opening new connection to postgres')
         __pg_connection = psycopg2.connect(connect_string())
         return __pg_connection
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        description='print connection string to stdout')
-
-    args = parser.parse_args()
-    print(connect_string())
