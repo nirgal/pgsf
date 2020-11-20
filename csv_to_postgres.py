@@ -21,10 +21,6 @@ def get_pgsql_import(tabledesc, csv_file_name, target_tablename=None, schema=Non
         quoted_fields = header.split(',')
         fields = [quoted_field.strip('"') for quoted_field in quoted_fields]
 
-        if config.DB_RENAME_ID:
-            fields = [field if field != 'Id' else 'SfId'
-                      for field in fields]
-
         forcenull_fields = []
         for fieldname, fieldinfo in tabledesc.get_sync_fields().items():
             if fieldinfo['nillable']:

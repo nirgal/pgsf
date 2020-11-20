@@ -100,10 +100,7 @@ def postgres_coldef_from_sffield(field):
             ]
     pgtype = postgres_type_raw(field)
     if field_name == 'Id':
-        if config.DB_RENAME_ID:
-            field_name = 'SfId'  # Can be NULL during inserts
-        else:
-            pgtype += ' PRIMARY KEY'
+        pgtype += ' PRIMARY KEY'
     else:
         if not field['nillable']:
             pgtype += ' NOT NULL'
@@ -120,10 +117,7 @@ def get_pgsql_create(table_name):
 
     tabledesc = TableDesc(table_name)
 
-    if config.DB_RENAME_ID:
-        lines = [' id SERIAL PRIMARY KEY']
-    else:
-        lines = []
+    lines = []
     sync_fields = tabledesc.get_sync_fields()
     for field_name, field in sync_fields.items():
         if field['calculated']:
@@ -141,7 +135,7 @@ def get_pgsql_create(table_name):
 
     indexed_fields_names = tabledesc.get_indexed_sync_field_names()
     for field_name, field in sync_fields.items():
-        if field_name == 'Id' and not config.DB_RENAME_ID:
+        if field_name == 'Id':
             continue  # primary key already there
         if field_name not in indexed_fields_names:
             continue
