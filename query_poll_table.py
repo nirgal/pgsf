@@ -60,8 +60,12 @@ def download_changes(td):
 
     pg = get_pg()
     cursor = pg.cursor()
-    cursor.execute('SELECT syncuntil FROM sync.status WHERE tablename=%s',
-                   (td.name,))
+    cursor.execute(
+        'SELECT syncuntil FROM {} WHERE tablename=%s'.format(
+            postgres_table_name('__sync')
+        ),(
+            td.name,
+        ))
     line = cursor.fetchone()
     if line is None:
         logger.critical("Can't find sync info for table %s. "
@@ -161,11 +165,14 @@ def mark_synced(td, timestamp):
     pg = get_pg()
     cursor = pg.cursor()
     cursor.execute(
-        'UPDATE sync.status SET syncuntil=%s WHERE tablename=%s', (
-            timestamp.strftime('%Y-%m-%dT%H:%M:%S.%f'),
-            td.name))
+        'UPDATE {} SET syncuntil=%s WHERE tablename=%s'.format(
+                postgres_table_name('__sync')
+            ), (
+                timestamp.strftime('%Y-%m-%dT%H:%M:%S.%f'),
+                 td.name))
     if cursor.rowcount != 1:
-        raise AssertionError("UPDATE sync.status failed")
+        raise AssertionError("UPDATE {} failed".format(
+            postgres_table_name('__sync')))
 
 
 def sync_table(tablename):
