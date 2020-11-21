@@ -74,14 +74,16 @@ def download_changes(td):
         return
     lastsync = line[0]  # type is datetime
 
-    if 'SystemModStamp' in fieldnames:
-        timefield = 'SystemModStamp'
-    elif 'LastModifiedDate' in fieldnames:
-        timefield = 'LastModifiedDate'
-    elif 'CreatedDate' in fieldnames:
-        timefield = 'CreatedDate'
-    else:
-        raise AssertionError('No field to synchronize from. Tried SystemModStamp, LastModifiedDate and CreatedDate.')
+    timefield = None
+    for timefield_try in ('SystemModStamp',
+                          'SystemModstamp',
+                          'LastModifiedDate',
+                          'CreatedDate'):
+        if timefield_try in fieldnames:
+            timefield = timefield_try
+            break
+    if not timefield:
+        raise AssertionError('No field to synchronize from. Tried SystemModStamp, SystemModstamp, LastModifiedDate and CreatedDate.')
 
     soql = "SELECT {} FROM {} WHERE {}>{}".format(
             ','.join(fieldnames),
