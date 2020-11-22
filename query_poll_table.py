@@ -41,7 +41,7 @@ def postgres_json_to_csv(field, value):
         except AttributeError as e:
             logger = logging.getLogger(__name__)
             logger.error("sftype is {} but value type is {}",
-                    sftype, type(value).__name__)
+                    (sftype, type(value).__name__))
             raise e
     elif sftype == 'int':
         return str(value)
