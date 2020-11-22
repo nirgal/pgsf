@@ -21,7 +21,6 @@ def create_csv_query_file(tablename):
 
 
 def _csv_quote(value):
-    #value = str(value)  # Hack
     # return '"' + value.replace('\\', '\\\\').replace('"', '\\"') + '"'
     return '"' + value.replace('"', '""').replace('\0','') + '"'
 
@@ -35,14 +34,10 @@ def postgres_json_to_csv(field, value):
         return ''
     if sftype in (
             'email', 'encryptedstring', 'id', 'multipicklist',
-            'picklist', 'phone', 'reference', 'string', 'textarea', 'url', 'anyType'):
-        try:
-            return _csv_quote(value)
-        except AttributeError as e:
-            logger = logging.getLogger(__name__)
-            logger.error("sftype is {} but value type is {}",
-                    (sftype, type(value).__name__))
-            raise e
+            'picklist', 'phone', 'reference', 'string', 'textarea', 'url'):
+        return _csv_quote(value)
+    elif sftype == 'anyType':
+        return _csv_quote(str(value))
     elif sftype == 'int':
         return str(value)
     elif sftype == 'date':
