@@ -8,16 +8,6 @@ from salesforce import get_Salesforce
 from simple_salesforce.exceptions import SalesforceMalformedRequest
 
 
-def spprint_ordereddict(od):
-    '''
-    Returns a nice string representation of an Ordered dict
-    '''
-    result = ''
-    for key, value in od.items():
-        result += '{}: {}\n'.format(key, value)
-    return result
-
-
 def query(soql, include_deleted=False):
     logger = logging.getLogger(__name__)
 
@@ -75,6 +65,7 @@ def query_count(soql, include_deleted=False):
 
 
 if __name__ == '__main__':
+    import json
 
     parser = argparse.ArgumentParser(
         description='Run an SOQL query Salesforce')
@@ -102,5 +93,5 @@ if __name__ == '__main__':
         print(query_count(args.soql, args.include_deleted))
     else:
         for record in query(args.soql, args.include_deleted):
-            print(spprint_ordereddict(record))
+            print(json.dumps(record, indent=2))
             print
