@@ -190,10 +190,9 @@ class TableDesc:
         sf_fields = self.get_sf_fields()
         if 'DurableId' in sf_fields:
             return 'DurableId'
-        elif 'Id' in sf_fields:
+        if 'Id' in sf_fields:
             return 'Id'
-        else:
-            raise AssertionError('Could not find primary key for table {}'.format(self.name))
+        raise AssertionError('Could not find primary key for table {}'.format(self.name))
 
 
 if __name__ == '__main__':

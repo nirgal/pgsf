@@ -13,19 +13,19 @@ def query(soql, include_deleted=False):
 
     def check_result(res):
         known_attributes = ('done', 'nextRecordsUrl', 'records', 'totalSize')
-        for key in result.keys():
+        for key in res.keys():
             if key not in known_attributes:
                 logger.warning("Unexpected attribute %s in query result", key)
 
-        if (result.get('done') is not True
-                and result.get('nextRecordsUrl') is None):
+        if (res.get('done') is not True
+                and res.get('nextRecordsUrl') is None):
             logger.warning("Expected 'done' or 'nextRecordsUrl'")
 
     sf = get_Salesforce()
     try:
         result = sf.query(soql, include_deleted=include_deleted)
-    except SalesforceMalformedRequest as e:
-        logger.error("%s", e.content[0]['message'])
+    except SalesforceMalformedRequest as exc:
+        logger.error("%s", exc.content[0]['message'])
         return None
 
     check_result(result)
@@ -57,8 +57,8 @@ def query_count(soql, include_deleted=False):
     sf = get_Salesforce()
     try:
         result = sf.query(soql, include_deleted=include_deleted)
-    except SalesforceMalformedRequest as e:
-        logger.error("%s", e.content[0]['message'])
+    except SalesforceMalformedRequest as exc:
+        logger.error("%s", exc.content[0]['message'])
         return None
 
     return result['totalSize']
@@ -94,4 +94,3 @@ if __name__ == '__main__':
     else:
         for record in query(args.soql, args.include_deleted):
             print(json.dumps(record, indent=2))
-            print

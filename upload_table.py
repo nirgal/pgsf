@@ -88,8 +88,8 @@ def upload_csv(
         while True:
             try:
                 bulk.wait_for_batch(jobid, batchid)
-            except requests.exceptions.ConnectionError as e:
-                logger.error('wait_for_batch failed, retrying...: %s', e)
+            except requests.exceptions.ConnectionError as exc:
+                logger.error('wait_for_batch failed, retrying...: %s', exc)
                 time.sleep(1)
             else:
                 break

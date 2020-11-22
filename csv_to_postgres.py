@@ -54,9 +54,9 @@ def job_csv_to_postgres(job):
     cursor = pg.cursor()
 
     sql = "TRUNCATE TABLE {quoted_table_name}".format(
-        quoted_table_name=postgres_table_name(table_name));
-    logger.debug(sql);
-    cursor.execute(sql);
+        quoted_table_name=postgres_table_name(table_name))
+    logger.debug(sql)
+    cursor.execute(sql)
 
     successfull_csv_files = [
             '{}/{}/{}.{}'.format(

@@ -6,6 +6,7 @@ import logging
 import config
 from salesforce import get_SalesforceBulk
 from tabledesc import TableDesc
+from salesforce_bulk.salesforce_bulk import BulkApiError
 
 logger = logging.getLogger(__name__)
 
@@ -18,9 +19,21 @@ def make_query(tabledesc,
     fields = tabledesc.get_sync_field_names()
 
     bulk = get_SalesforceBulk()
-    job = bulk.create_query_job(table_name,
-                                contentType=content_type,
-                                pk_chunking=pk_chunking)
+    try:
+        job = bulk.create_query_job(table_name,
+                                    contentType=content_type,
+                                    pk_chunking=pk_chunking)
+    except BulkApiError as exc:
+        try:
+            arg = exc.args[0]
+        except:
+            raise exc
+        if 'is not supported to use PKChunking' in arg:
+            logger.warning('PKChunking failed. Trying without.')
+            job = bulk.create_query_job(table_name,
+                                        contentType=content_type)
+        else:
+            raise exc
     query = 'SELECT ' + ','.join(fields) + ' FROM ' + table_name
     if where:
         query += ' WHERE ' + where

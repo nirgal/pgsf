@@ -13,36 +13,34 @@ def postgres_type_raw(field):
             'email', 'encryptedstring', 'id',
             'phone', 'reference', 'string', 'textarea', 'url'):
         return 'VARCHAR({})'.format(field['length'])
-    elif sftype in ('picklist', 'multipicklist'):
+    if sftype in ('picklist', 'multipicklist'):
         return 'TEXT'  # size is not reliable
-    elif sftype == 'int':
+    if sftype == 'int':
         return 'INTEGER'
-    elif sftype == 'date':
+    if sftype == 'date':
         return 'DATE'
-    elif sftype == 'datetime':
+    if sftype == 'datetime':
         return 'TIMESTAMP'
-    elif sftype == 'boolean':
+    if sftype == 'boolean':
         return 'BOOLEAN'
-    elif sftype == 'currency':
+    if sftype == 'currency':
         return 'NUMERIC({}, {})'.format(field['precision'], field['scale'])
-    elif sftype in ('double', 'percent'):
+    if sftype in ('double', 'percent'):
         return 'DOUBLE PRECISION'
-    elif sftype == 'anyType':
+    if sftype == 'anyType':
         return 'TEXT'
-    else:
-        return '"{}" NOT IMPLEMENTED '.format(sftype)
+    return '"{}" NOT IMPLEMENTED '.format(sftype)
 
 
-def postgres_escape_str(s):
-    return "'" + s.replace("'", "''") + "'"
+def postgres_escape_str(text):
+    return "'" + text.replace("'", "''") + "'"
 
 
 def postgres_escape_name(name):
     assert '"' not in name
     if config.DB_QUOTE_NAMES:
         return '"' + name + '"'
-    else:
-        return name
+    return name
 
 
 def postgres_table_name(name, schema=None):
@@ -64,14 +62,13 @@ def postgres_table_name(name, schema=None):
 
 
 def postgres_const(value):
-    if type(value) == str:
+    if isinstance(value, str):
         return postgres_escape_str(value)
-    elif type(value) == bool:
+    if isinstance(value, bool):
         return 'TRUE' if value else 'FALSE'
-    elif type(value) in (int, float):
+    if isinstance(value, (int, float)):
         return str(value)
-    else:
-        return 'NOTIMPLEMENTED'
+    return 'NOTIMPLEMENTED'
 
 
 def postgres_coldef_from_sffield(field):
@@ -99,7 +96,7 @@ def postgres_coldef_from_sffield(field):
                             'DOUBLE PRECISION'),
             ]
     pgtype = postgres_type_raw(field)
-    if field_name == 'Id' or field_name == 'DurableId':
+    if field_name in ('Id', 'DurableId'):
         pgtype += ' PRIMARY KEY'
     else:
         if not field['nillable']:
@@ -107,7 +104,7 @@ def postgres_coldef_from_sffield(field):
         if field['defaultValue']:
             pgtype += ' DEFAULT ' + postgres_const(field['defaultValue'])
         if field['unique']:
-                pgtype += ' UNIQUE'
+            pgtype += ' UNIQUE'
     return [' {} {}'.format(postgres_escape_name(field_name), pgtype)]
 
 
@@ -135,7 +132,7 @@ def get_pgsql_create(table_name):
 
     indexed_fields_names = tabledesc.get_indexed_sync_field_names()
     for field_name, field in sync_fields.items():
-        if field_name == 'Id' or field_name == 'DurableId':
+        if field_name in ('Id', 'DurableId'):
             continue  # primary key already indexed
         if field_name not in indexed_fields_names:
             continue
@@ -177,7 +174,7 @@ if __name__ == '__main__':
         for line in sql:
             try:
                 cursor.execute(line)
-            except (Exception, psycopg2.ProgrammingError) as e:
-                logging.error('Error while executing '+line)
-                raise e
+            except (Exception, psycopg2.ProgrammingError) as exc:
+                logging.error('Error while executing %s', line)
+                raise exc
         pg.commit()

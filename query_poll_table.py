@@ -36,20 +36,19 @@ def postgres_json_to_csv(field, value):
             'email', 'encryptedstring', 'id', 'multipicklist',
             'picklist', 'phone', 'reference', 'string', 'textarea', 'url'):
         return _csv_quote(value)
-    elif sftype == 'anyType':
+    if sftype == 'anyType':
         return _csv_quote(str(value))
-    elif sftype == 'int':
+    if sftype == 'int':
         return str(value)
-    elif sftype == 'date':
+    if sftype == 'date':
         return str(value)
-    elif sftype == 'datetime':
+    if sftype == 'datetime':
         return str(value)  # 2019-11-18T15:28:14.000Z TODO check
-    elif sftype == 'boolean':
+    if sftype == 'boolean':
         return 't' if value else 'f'
-    elif sftype in ('currency', 'double', 'percent'):
+    if sftype in ('currency', 'double', 'percent'):
         return str(value)
-    else:
-        return '"{}" NOT IMPLEMENTED '.format(sftype)
+    return '"{}" NOT IMPLEMENTED '.format(sftype)
 
 
 def download_changes(td):
@@ -73,7 +72,7 @@ def download_changes(td):
         logger.critical("Can't find sync info for table %s. "
                         "Please use bulk the first time",
                         td.name)
-        return
+        return None
     lastsync = line[0]  # type is datetime
 
     timefield = None
