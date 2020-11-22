@@ -90,16 +90,19 @@ def job_csv_to_postgres(job):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        description='Import salesforce csv files in postgres')
-    parser.add_argument(
-            'job',
-            help='Job id')
-    args = parser.parse_args()
+    def main():
+        parser = argparse.ArgumentParser(
+            description='Import salesforce csv files in postgres')
+        parser.add_argument(
+                'job',
+                help='Job id')
+        args = parser.parse_args()
 
-    logging.basicConfig(
-            filename=config.LOGFILE,
-            format=config.LOGFORMAT.format('csv_to_postgres '+args.job),
-            level=config.LOGLEVEL)
+        logging.basicConfig(
+                filename=config.LOGFILE,
+                format=config.LOGFORMAT.format('csv_to_postgres '+args.job),
+                level=config.LOGLEVEL)
 
-    job_csv_to_postgres(args.job)
+        job_csv_to_postgres(args.job)
+
+    main()

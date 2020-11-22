@@ -196,26 +196,29 @@ class TableDesc:
 
 
 if __name__ == '__main__':
-    import json
+    def main():
+        import json
 
-    parser = argparse.ArgumentParser(
-        description='Create initial list of fields to synchronise')
-    parser.add_argument(
-            '--rawdump',
-            action='store_true',
-            help='dump the raw SF description')
-    parser.add_argument(
-            'table',
-            help='table name')
-    args = parser.parse_args()
+        parser = argparse.ArgumentParser(
+            description='Create initial list of fields to synchronise')
+        parser.add_argument(
+                '--rawdump',
+                action='store_true',
+                help='dump the raw SF description')
+        parser.add_argument(
+                'table',
+                help='table name')
+        args = parser.parse_args()
 
-    logging.basicConfig(
-            filename=config.LOGFILE,
-            format=config.LOGFORMAT.format('tabledesc '+args.table),
-            level=config.LOGLEVEL)
+        logging.basicConfig(
+                filename=config.LOGFILE,
+                format=config.LOGFORMAT.format('tabledesc '+args.table),
+                level=config.LOGLEVEL)
 
-    main_td = TableDesc(args.table)
-    if args.rawdump:
-        print(json.dumps(main_td.sf_desc, indent=2))
-    else:
-        main_td.make_csv_fieldlist()
+        main_td = TableDesc(args.table)
+        if args.rawdump:
+            print(json.dumps(main_td.sf_desc, indent=2))
+        else:
+            main_td.make_csv_fieldlist()
+
+    main()

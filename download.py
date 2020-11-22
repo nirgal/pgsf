@@ -116,18 +116,21 @@ def download(job, pool_time=5):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        description='Download csv data from salesforce')
-    parser.add_argument(
-            'job',
-            help='job id')
-    args = parser.parse_args()
+    def main():
+        parser = argparse.ArgumentParser(
+            description='Download csv data from salesforce')
+        parser.add_argument(
+                'job',
+                help='job id')
+        args = parser.parse_args()
 
-    logging.basicConfig(
-            filename=config.LOGFILE,
-            format=config.LOGFORMAT.format('download '+args.job),
-            level=config.LOGLEVEL)
+        logging.basicConfig(
+                filename=config.LOGFILE,
+                format=config.LOGFORMAT.format('download '+args.job),
+                level=config.LOGLEVEL)
 
-    job = args.job
+        job = args.job
 
-    download(job)
+        download(job)
+
+    main()

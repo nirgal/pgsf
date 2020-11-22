@@ -5,8 +5,8 @@ import logging
 
 import config
 from salesforce import get_SalesforceBulk
-from tabledesc import TableDesc
 from salesforce_bulk.salesforce_bulk import BulkApiError
+from tabledesc import TableDesc
 
 logger = logging.getLogger(__name__)
 
@@ -47,51 +47,54 @@ def make_query(tabledesc,
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        description='Start a query job in salesforce')
-    parser.add_argument(
-            'table',
-            help='table name')
-    parser.add_argument(
-            '--where',
-            help='condition')
-    parser.add_argument(
-            '--limit',
-            type=int,
-            help='limit number of rows')
-    parser.add_argument(
-            '--content-type',
-            choices=('JSON', 'CSV'),
-            default='CSV',
-            help='limit number of rows')
-    parser.add_argument(
-            '--pk-chunking',
-            metavar='SIZE',
-            type=int,
-            help='chunk size')
-    parser.add_argument(
-            '--no-pk-chunking',
-            action='store_true',
-            help='disable pk chuncking')
-    args = parser.parse_args()
+    def main():
+        parser = argparse.ArgumentParser(
+            description='Start a query job in salesforce')
+        parser.add_argument(
+                'table',
+                help='table name')
+        parser.add_argument(
+                '--where',
+                help='condition')
+        parser.add_argument(
+                '--limit',
+                type=int,
+                help='limit number of rows')
+        parser.add_argument(
+                '--content-type',
+                choices=('JSON', 'CSV'),
+                default='CSV',
+                help='limit number of rows')
+        parser.add_argument(
+                '--pk-chunking',
+                metavar='SIZE',
+                type=int,
+                help='chunk size')
+        parser.add_argument(
+                '--no-pk-chunking',
+                action='store_true',
+                help='disable pk chuncking')
+        args = parser.parse_args()
 
-    logging.basicConfig(
-            filename=config.LOGFILE,
-            format=config.LOGFORMAT.format('query_bulk '+args.table),
-            level=config.LOGLEVEL)
+        logging.basicConfig(
+                filename=config.LOGFILE,
+                format=config.LOGFORMAT.format('query_bulk '+args.table),
+                level=config.LOGLEVEL)
 
-    if args.pk_chunking:
-        pk_chunking = args.pk_chunking
-    elif args.no_pk_chunking:
-        pk_chunking = None
-    else:
-        pk_chunking = True
+        if args.pk_chunking:
+            pk_chunking = args.pk_chunking
+        elif args.no_pk_chunking:
+            pk_chunking = None
+        else:
+            pk_chunking = True
 
-    table_name = args.table
-    tabledesc = TableDesc(table_name)
-    job = make_query(
-            tabledesc, where=args.where, limit=args.limit,
-            pk_chunking=pk_chunking)
+        table_name = args.table
+        tabledesc = TableDesc(table_name)
+        job = make_query(
+                tabledesc, where=args.where, limit=args.limit,
+                pk_chunking=pk_chunking)
 
-    logger.info('Created job %s', job)
-    print('Created job {}'.format(job))
+        logger.info('Created job %s', job)
+        print('Created job {}'.format(job))
+
+    main()

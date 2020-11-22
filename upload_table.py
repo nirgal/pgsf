@@ -99,46 +99,49 @@ def upload_csv(
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        description='Upload a scv file into a salesforce table',
-        epilog='This uses a single Salesforce Bulk V1 "update" API.'
-               ' The CSV file is cut in chunks.'
-               ' Each chunk is submited as a bacth in the job.'
-        )
-    parser.add_argument(
-        '--max-upload-size',
-        type=int,
-        default=DEFAULT_MAX_UPLOAD_SIZE,
-        help='cut csv file in chunks no larger than %(metavar)s bytes.'
-             ' default=%(default)s',
-        metavar='SIZE',
-        )
-    parser.add_argument(
-        '--max-upload-records',
-        type=int,
-        default=DEFAULT_MAX_UPLOAD_RECORDS,
-        help='cut csv file in chunks with no more than %(metavar)s records.'
-             ' default=%(default)s',
-        metavar='LIMIT',
-        )
-    parser.add_argument(
-            'sftable',
-            help='salesforce table name')
-    parser.add_argument(
-            'csvfile',
-            help='file to upload')
-    args = parser.parse_args()
+    def main():
+        parser = argparse.ArgumentParser(
+            description='Upload a scv file into a salesforce table',
+            epilog='This uses a single Salesforce Bulk V1 "update" API.'
+                   ' The CSV file is cut in chunks.'
+                   ' Each chunk is submited as a bacth in the job.'
+            )
+        parser.add_argument(
+            '--max-upload-size',
+            type=int,
+            default=DEFAULT_MAX_UPLOAD_SIZE,
+            help='cut csv file in chunks no larger than %(metavar)s bytes.'
+                 ' default=%(default)s',
+            metavar='SIZE',
+            )
+        parser.add_argument(
+            '--max-upload-records',
+            type=int,
+            default=DEFAULT_MAX_UPLOAD_RECORDS,
+            help='cut csv file in chunks with no more than %(metavar)s records.'
+                 ' default=%(default)s',
+            metavar='LIMIT',
+            )
+        parser.add_argument(
+                'sftable',
+                help='salesforce table name')
+        parser.add_argument(
+                'csvfile',
+                help='file to upload')
+        args = parser.parse_args()
 
-    logging.basicConfig(
-            filename=config.LOGFILE,
-            format=config.LOGFORMAT.format('upload_table '+args.sftable+' '+args.csvfile),
-            level=config.LOGLEVEL)
+        logging.basicConfig(
+                filename=config.LOGFILE,
+                format=config.LOGFORMAT.format('upload_table '+args.sftable+' '+args.csvfile),
+                level=config.LOGLEVEL)
 
-    td = TableDesc(args.sftable)
-    csvfilename = args.csvfile
+        td = TableDesc(args.sftable)
+        csvfilename = args.csvfile
 
-    upload_csv(
-            td,
-            csvfilename,
-            max_size=args.max_upload_size,
-            max_records=args.max_upload_records)
+        upload_csv(
+                td,
+                csvfilename,
+                max_size=args.max_upload_size,
+                max_records=args.max_upload_records)
+
+    main()

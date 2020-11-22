@@ -65,32 +65,35 @@ def query_count(soql, include_deleted=False):
 
 
 if __name__ == '__main__':
-    import json
+    def main():
+        import json
 
-    parser = argparse.ArgumentParser(
-        description='Run an SOQL query Salesforce')
-    parser.add_argument(
-            '--include-deleted',
-            default=False, action='store_true',
-            help='include deleted records')
-    parser.add_argument(
-            '--count',
-            default=False, action='store_true',
-            help='only prints number of records')
-    parser.add_argument(
-            'soql',
-            help='the query to tun')
-    # exemple:
-    # SELECT COUNT() FROM Campaign WHERE SystemModStamp>2019-12-18T11:14:55Z
-    args = parser.parse_args()
+        parser = argparse.ArgumentParser(
+            description='Run an SOQL query Salesforce')
+        parser.add_argument(
+                '--include-deleted',
+                default=False, action='store_true',
+                help='include deleted records')
+        parser.add_argument(
+                '--count',
+                default=False, action='store_true',
+                help='only prints number of records')
+        parser.add_argument(
+                'soql',
+                help='the query to tun')
+        # exemple:
+        # SELECT COUNT() FROM Campaign WHERE SystemModStamp>2019-12-18T11:14:55Z
+        args = parser.parse_args()
 
-    logging.basicConfig(
-            filename=config.LOGFILE,
-            format=config.LOGFORMAT.format('query'),
-            level=config.LOGLEVEL)
+        logging.basicConfig(
+                filename=config.LOGFILE,
+                format=config.LOGFORMAT.format('query'),
+                level=config.LOGLEVEL)
 
-    if args.count:
-        print(query_count(args.soql, args.include_deleted))
-    else:
-        for record in query(args.soql, args.include_deleted):
-            print(json.dumps(record, indent=2))
+        if args.count:
+            print(query_count(args.soql, args.include_deleted))
+        else:
+            for record in query(args.soql, args.include_deleted):
+                print(json.dumps(record, indent=2))
+
+    main()

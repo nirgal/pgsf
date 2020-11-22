@@ -3,7 +3,9 @@
 import argparse
 import logging
 from datetime import datetime, timedelta
+
 from psycopg2 import DatabaseError
+
 import config
 from createtable import (postgres_escape_name, postgres_escape_str,
                          postgres_table_name)
@@ -84,7 +86,9 @@ def download_changes(td):
             timefield = timefield_try
             break
     if not timefield:
-        raise AssertionError('No field to synchronize from. Tried SystemModStamp, SystemModstamp, LastModifiedDate and CreatedDate.')
+        raise AssertionError(
+                'No field to synchronize from. Tried SystemModStamp,'
+                ' SystemModstamp, LastModifiedDate and CreatedDate.')
 
     soql = "SELECT {} FROM {} WHERE {}>{}".format(
             ','.join(fieldnames),
@@ -216,16 +220,19 @@ def sync_table(tablename):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        description='Refresh a table from salesforce to postgres')
-    parser.add_argument(
-            'table',
-            help='the table name to refresh')
-    args = parser.parse_args()
+    def main():
+        parser = argparse.ArgumentParser(
+            description='Refresh a table from salesforce to postgres')
+        parser.add_argument(
+                'table',
+                help='the table name to refresh')
+        args = parser.parse_args()
 
-    logging.basicConfig(
-            filename=config.LOGFILE,
-            format=config.LOGFORMAT.format('query_poll_table '+args.table),
-            level=config.LOGLEVEL)
+        logging.basicConfig(
+                filename=config.LOGFILE,
+                format=config.LOGFORMAT.format('query_poll_table '+args.table),
+                level=config.LOGLEVEL)
 
-    sync_table(args.table)
+        sync_table(args.table)
+
+    main()
