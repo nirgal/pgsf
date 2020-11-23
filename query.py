@@ -2,50 +2,38 @@
 
 import argparse
 import logging
+#from concurrent.futures import ThreadPoolExecutor
 
 import config
 from salesforce import get_Salesforce
 from simple_salesforce.exceptions import SalesforceMalformedRequest
 
+logger = logging.getLogger(__name__)
+
+
+#def query_cb(soql, chunk_callback, include_deleted=False):
+
+def _check_result(res):
+    known_attributes = ('done', 'nextRecordsUrl', 'records', 'totalSize')
+    for key in res.keys():
+        if key not in known_attributes:
+            logger.warning("Unexpected attribute %s in query result", key)
+
 
 def query(soql, include_deleted=False):
-    logger = logging.getLogger(__name__)
-
-    def check_result(res):
-        known_attributes = ('done', 'nextRecordsUrl', 'records', 'totalSize')
-        for key in res.keys():
-            if key not in known_attributes:
-                logger.warning("Unexpected attribute %s in query result", key)
-
-        if (res.get('done') is not True
-                and res.get('nextRecordsUrl') is None):
-            logger.warning("Expected 'done' or 'nextRecordsUrl'")
-
     sf = get_Salesforce()
-    try:
-        result = sf.query(soql, include_deleted=include_deleted)
-    except SalesforceMalformedRequest as exc:
-        logger.error("%s", exc.content[0]['message'])
-        return None
-
-    check_result(result)
-
-    logger.info('sf.query got %s record(s).', len(result['records']))
-
-    for record in result['records']:
-        yield record
-
-    while result.get('nextRecordsUrl'):
-        result = sf.query_more(
-                result['nextRecordsUrl'],
-                identifier_is_url=True,
-                include_deleted=include_deleted)
-        logger.info('sf.query got %s record(s).', len(result['records']))
-
-        check_result(result)
-
-        for record in result['records']:
+    result = sf.query(soql, include_deleted=include_deleted)
+    while True:
+        _check_result(result)
+        records = result['records']
+        logger.info('sf.query got %s record(s).', len(records))
+        for record in records:
             yield record
+        if not result['done']:
+            result = sf.query_more(result['nextRecordsUrl'],
+                                         identifier_is_url=True)
+        else:
+            break
 
 
 def query_count(soql, include_deleted=False):
@@ -53,7 +41,6 @@ def query_count(soql, include_deleted=False):
     Simmilar to query, but only returns 'totalSize' attribute.
     This is desirable for queries like "SELECT COUNT() ...".
     '''
-    logger = logging.getLogger(__name__)
     sf = get_Salesforce()
     try:
         result = sf.query(soql, include_deleted=include_deleted)
@@ -90,10 +77,13 @@ if __name__ == '__main__':
                 format=config.LOGFORMAT.format('query'),
                 level=config.LOGLEVEL)
 
-        if args.count:
-            print(query_count(args.soql, args.include_deleted))
-        else:
-            for record in query(args.soql, args.include_deleted):
-                print(json.dumps(record, indent=2))
+        try:
+            if args.count:
+                print(query_count(args.soql, args.include_deleted))
+            else:
+                for record in query(args.soql, args.include_deleted):
+                    print(json.dumps(record, indent=2))
+        except SalesforceMalformedRequest as exc:
+            print(exc.content[0]['message'])
 
     main()
