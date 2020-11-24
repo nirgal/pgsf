@@ -14,7 +14,6 @@ from postgres import get_pg
 from query import query
 from tabledesc import TableDesc
 
-SAFETY_SYNC_EXTRA = 1  # number of seconds we remove from now
 
 def create_csv_query_file(tablename):
     return '{}/query_{}_{}.csv'.format(
@@ -184,7 +183,6 @@ def mark_synced(td, timestamp):
 
 def sync_table(tablename):
     logger = logging.getLogger(__name__)
-    start_time = datetime.utcnow() - timedelta(seconds=SAFETY_SYNC_EXTRA)
 
     pg = get_pg()
     cursor = pg.cursor()
@@ -214,7 +212,19 @@ def sync_table(tablename):
             postgres_table_name(tmp_tablename, schema=''))
         cursor.execute(sql)
 
-    mark_synced(td, start_time)
+        sql = '''UPDATE sync.status
+                 SET syncuntil=(
+                     SELECT max("SystemModstamp")
+                     FROM {quoted_table_dest}
+                     )
+                 WHERE tablename={str_table_name}
+              '''.format(
+                    quoted_table_dest=quoted_table_dest,
+                    str_table_name=postgres_escape_str(td.name),
+                    )
+        cursor.execute(sql)
+        if cursor.rowcount != 1:
+            raise Error("UPDATE sync.status failed")
 
     pg.commit()
 

@@ -20,6 +20,13 @@ def _check_result(res):
             logger.warning("Unexpected attribute %s in query result", key)
 
 
+def updated(tablename, start, end):
+    sf = get_Salesforce()
+    return sf.__getattr__(tablename).updated(start, end)
+# from datetime import datetime, timezone
+# print(updated('Contact', datetime(2020, 11, 23, 0, 0, 0, tzinfo=timezone.utc), datetime(2099,12,31,0,0,0,tzinfo=timezone.utc)))
+
+
 def query(soql, include_deleted=False):
     sf = get_Salesforce()
     result = sf.query(soql, include_deleted=include_deleted)
