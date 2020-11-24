@@ -219,7 +219,7 @@ def sync_table(tablename):
                      )
                  WHERE tablename={str_table_name}
               '''.format(
-                    quoted_table_dest=quoted_table_dest,
+                    quoted_table_dest=postgres_table_name(td.name),
                     str_table_name=postgres_escape_str(td.name),
                     )
         cursor.execute(sql)
