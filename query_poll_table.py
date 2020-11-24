@@ -212,13 +212,14 @@ def sync_table(tablename):
             postgres_table_name(tmp_tablename, schema=''))
         cursor.execute(sql)
 
-        sql = '''UPDATE sync.status
+        sql = '''UPDATE {sync_name}
                  SET syncuntil=(
                      SELECT max("SystemModstamp")
                      FROM {quoted_table_dest}
                      )
                  WHERE tablename={str_table_name}
               '''.format(
+                    sync_name=postgres_table_name('__sync'),
                     quoted_table_dest=postgres_table_name(td.name),
                     str_table_name=postgres_escape_str(td.name),
                     )
