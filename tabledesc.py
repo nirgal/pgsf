@@ -195,6 +195,18 @@ class TableDesc:
         raise AssertionError('Could not find primary key for table {}'.format(self.name))
 
 
+    def get_timestamp_name(self):
+        fieldnames = self.get_sync_field_names()
+        for name in ('SystemModStamp',
+                     'SystemModstamp',
+                     'LastModifiedDate',
+                     'CreatedDate'):
+            if name in fieldnames:
+                return name
+        raise AssertionError(
+                'No field to synchronize from. Tried SystemModStamp,'
+                ' SystemModstamp, LastModifiedDate and CreatedDate.')
+
 if __name__ == '__main__':
     def main():
         import json

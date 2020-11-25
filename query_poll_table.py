@@ -76,18 +76,7 @@ def download_changes(td):
         return None
     lastsync = line[0]  # type is datetime
 
-    timefield = None
-    for timefield_try in ('SystemModStamp',
-                          'SystemModstamp',
-                          'LastModifiedDate',
-                          'CreatedDate'):
-        if timefield_try in fieldnames:
-            timefield = timefield_try
-            break
-    if not timefield:
-        raise AssertionError(
-                'No field to synchronize from. Tried SystemModStamp,'
-                ' SystemModstamp, LastModifiedDate and CreatedDate.')
+    timefield = td.get_timestamp_name()
 
     soql = "SELECT {} FROM {} WHERE {}>{}".format(
             ','.join(fieldnames),
@@ -212,14 +201,16 @@ def sync_table(tablename):
             postgres_table_name(tmp_tablename, schema=''))
         cursor.execute(sql)
 
+        timefield = td.get_timestamp_name()
         sql = '''UPDATE {sync_name}
                  SET syncuntil=(
-                     SELECT max("SystemModstamp")
+                     SELECT max({timefield})
                      FROM {quoted_table_dest}
                      )
                  WHERE tablename={str_table_name}
               '''.format(
                     sync_name=postgres_table_name('__sync'),
+                    timefield=postgres_escape_name(timefield),
                     quoted_table_dest=postgres_table_name(td.name),
                     str_table_name=postgres_escape_str(td.name),
                     )
