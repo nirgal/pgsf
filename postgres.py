@@ -24,6 +24,7 @@ def connect_string():
             for k, v in connect_params.items())
     return connect_string
 
+
 def get_pg():
     '''
     Return *the* common psycopg connection to the database
@@ -37,3 +38,12 @@ def get_pg():
         logger.debug('Opening new connection to postgres')
         __pg_connection = psycopg2.connect(connect_string())
         return __pg_connection
+
+
+def set_autocommit(autocommit):
+    '''
+    Simple wrapper to set autocommit mode
+    See https://www.psycopg.org/docs/usage.html#transactions-control
+    '''
+    pg = get_pg()
+    pg.set_session(autocommit=autocommit)

@@ -38,7 +38,7 @@ def get_pgsql_import(tabledesc, csv_file_name, target_tablename=None, schema=Non
                 force_null=force_null)
 
 
-def job_csv_to_postgres(job):
+def job_csv_to_postgres(job, autocommit=True):
     logger = logging.getLogger(__name__)
 
     with open(config.JOB_DIR + '/' + job + '/' + 'status.json') as file:
@@ -49,8 +49,10 @@ def job_csv_to_postgres(job):
     table_name = job_status['object']
     td = TableDesc(table_name)
 
-    from postgres import get_pg
+    from postgres import get_pg, set_autocommit
     pg = get_pg()
+    if autocommit:
+        set_autocommit(True)
     cursor = pg.cursor()
 
     sql = "TRUNCATE TABLE {quoted_table_name}".format(
@@ -86,13 +88,19 @@ def job_csv_to_postgres(job):
             ),(
                 table_name,
                 job_status['systemModstamp']))
-    pg.commit()
+
+    if not autocommit:
+        pg.commit()
 
 
 if __name__ == '__main__':
     def main():
         parser = argparse.ArgumentParser(
             description='Import salesforce csv files in postgres')
+        parser.add_argument(
+                '--autocommit',
+                action='store_true',
+                help='enable autocommit')
         parser.add_argument(
                 'job',
                 help='Job id')
@@ -103,6 +111,6 @@ if __name__ == '__main__':
                 format=config.LOGFORMAT.format('csv_to_postgres '+args.job),
                 level=config.LOGLEVEL)
 
-        job_csv_to_postgres(args.job)
+        job_csv_to_postgres(args.job, args.autocommit)
 
     main()
