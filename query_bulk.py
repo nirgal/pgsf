@@ -26,7 +26,7 @@ def make_query(tabledesc,
     except BulkApiError as exc:
         try:
             arg = exc.args[0]
-        except:
+        except (AttributeError, IndexError):
             raise exc
         if 'is not supported to use PKChunking' in arg:
             logger.warning('PKChunking failed. Trying without.')

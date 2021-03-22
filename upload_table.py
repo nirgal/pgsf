@@ -118,8 +118,8 @@ if __name__ == '__main__':
             '--max-upload-records',
             type=int,
             default=DEFAULT_MAX_UPLOAD_RECORDS,
-            help='cut csv file in chunks with no more than %(metavar)s records.'
-                 ' default=%(default)s',
+            help='cut csv file in chunks with no more than %(metavar)s '
+                 'records. default=%(default)s',
             metavar='LIMIT',
             )
         parser.add_argument(
@@ -132,7 +132,8 @@ if __name__ == '__main__':
 
         logging.basicConfig(
                 filename=config.LOGFILE,
-                format=config.LOGFORMAT.format('upload_table '+args.sftable+' '+args.csvfile),
+                format=config.LOGFORMAT.format(
+                    'upload_table '+args.sftable+' '+args.csvfile),
                 level=config.LOGLEVEL)
 
         td = TableDesc(args.sftable)

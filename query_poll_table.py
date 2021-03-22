@@ -23,7 +23,8 @@ def create_csv_query_file(tablename):
 
 def _csv_quote(value):
     # return '"' + value.replace('\\', '\\\\').replace('"', '\\"') + '"'
-    return '"' + value.replace('"', '""').replace('\0','') + '"'
+    return '"' + value.replace('"', '""').replace('\0', '') + '"'
+
 
 def postgres_json_to_csv(field, value):
     '''
@@ -65,7 +66,7 @@ def download_changes(td):
     cursor.execute(
         'SELECT syncuntil FROM {} WHERE tablename=%s'.format(
             postgres_table_name('__sync')
-        ),(
+        ), (
             td.name,
         ))
     line = cursor.fetchone()
@@ -164,7 +165,7 @@ def mark_synced(td, timestamp):
                 postgres_table_name('__sync')
             ), (
                 timestamp.strftime('%Y-%m-%dT%H:%M:%S.%f'),
-                 td.name))
+                td.name))
     if cursor.rowcount != 1:
         raise AssertionError("UPDATE {} failed".format(
             postgres_table_name('__sync')))
@@ -215,8 +216,7 @@ def sync_table(tablename):
                     str_table_name=postgres_escape_str(td.name),
                     )
         cursor.execute(sql)
-        if cursor.rowcount != 1:
-            raise Error("UPDATE sync.status failed")
+        assert cursor.rowcount == 1, "UPDATE sync.status failed"
 
     pg.commit()
 

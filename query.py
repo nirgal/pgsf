@@ -38,7 +38,7 @@ def query(soql, include_deleted=False):
             yield record
         if not result['done']:
             result = sf.query_more(result['nextRecordsUrl'],
-                                         identifier_is_url=True)
+                                   identifier_is_url=True)
         else:
             break
 

@@ -151,7 +151,8 @@ class TableDesc:
                 logging.debug("Describing field %s : %s", fieldname, fieldinfo)
                 if default == 'minimal':
                     if fieldname in default_import_fields:
-                        if fieldname == 'Id' and 'DurableId' in sf_fields.items():
+                        if (fieldname == 'Id'
+                                and 'DurableId' in sf_fields.items()):
                             isimport = ''
                         else:
                             isimport = '1'
@@ -160,7 +161,8 @@ class TableDesc:
                 else:  # default default
                     if fieldinfo['calculated']:
                         isimport = ''
-                    elif fieldname == 'Id' and 'DurableId' in sf_fields.items():
+                    elif (fieldname == 'Id'
+                            and 'DurableId' in sf_fields.items()):
                         isimport = ''
                     else:
                         isimport = '1'
@@ -192,8 +194,8 @@ class TableDesc:
             return 'DurableId'
         if 'Id' in sf_fields:
             return 'Id'
-        raise AssertionError('Could not find primary key for table {}'.format(self.name))
-
+        raise AssertionError(
+                'Could not find primary key for table {}'.format(self.name))
 
     def get_timestamp_name(self):
         fieldnames = self.get_sync_field_names()
@@ -206,6 +208,7 @@ class TableDesc:
         raise AssertionError(
                 'No field to synchronize from. Tried SystemModStamp,'
                 ' SystemModstamp, LastModifiedDate and CreatedDate.')
+
 
 if __name__ == '__main__':
     def main():
