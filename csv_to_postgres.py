@@ -9,7 +9,10 @@ from createtable import postgres_escape_name, postgres_table_name
 from tabledesc import TableDesc
 
 
-def get_pgsql_import(tabledesc, csv_file_name, target_tablename=None, schema=None):
+def get_pgsql_import(tabledesc,
+                     csv_file_name,
+                     target_tablename=None,
+                     schema=None):
     """
     schema is set to '' for temporary tables
     else the config is used: use None as a parameter
@@ -33,7 +36,9 @@ def get_pgsql_import(tabledesc, csv_file_name, target_tablename=None, schema=Non
             force_null = ''
         return """COPY {quoted_table_name} ({fields})
                   FROM STDIN WITH (FORMAT csv, HEADER{force_null})""".format(
-                quoted_table_name=postgres_table_name(target_tablename, schema),
+                quoted_table_name=postgres_table_name(
+                    target_tablename,
+                    schema),
                 fields=','.join([postgres_escape_name(f) for f in fields]),
                 force_null=force_null)
 
@@ -47,7 +52,6 @@ def job_csv_to_postgres(job, autocommit=True):
         batches = json.loads(file.read())
 
     table_name = job_status['object']
-    td = TableDesc(table_name)
 
     from postgres import get_pg, set_autocommit
     pg = get_pg()
@@ -55,26 +59,35 @@ def job_csv_to_postgres(job, autocommit=True):
         set_autocommit(True)
     cursor = pg.cursor()
 
-    sql = "TRUNCATE TABLE {quoted_table_name}".format(
-        quoted_table_name=postgres_table_name(table_name))
-    logger.debug(sql)
-    cursor.execute(sql)
+    if int(job_status['numberRecordsProcessed']):
 
-    successfull_csv_files = [
-            '{}/{}/{}.{}'.format(
-                config.JOB_DIR, job, batch['id'], job_status['contentType'])
-            for batch in batches
-            if batch['state'] == 'Completed'
-            ]
+        td = TableDesc(table_name)
 
-    sql = get_pgsql_import(td, successfull_csv_files[0])
+        sql = "TRUNCATE TABLE {quoted_table_name}".format(
+            quoted_table_name=postgres_table_name(table_name))
+        logger.debug(sql)
+        cursor.execute(sql)
 
-    logger.debug('%s', sql)
+        successfull_csv_files = [
+                '{}/{}/{}.{}'.format(
+                    config.JOB_DIR,
+                    job,
+                    batch['id'],
+                    job_status['contentType'])
+                for batch in batches
+                if batch['state'] == 'Completed'
+                ]
 
-    for csv in successfull_csv_files:
-        with open(csv) as file:
-            cursor.copy_expert(sql, file)
-            logger.debug("rowcount: %s", cursor.rowcount)
+        sql = get_pgsql_import(td, successfull_csv_files[0])
+
+        logger.debug('%s', sql)
+
+        for csv in successfull_csv_files:
+            with open(csv) as file:
+                cursor.copy_expert(sql, file)
+                logger.debug("rowcount: %s", cursor.rowcount)
+    else:
+        logger.critical('%s is empty', table_name)
 
     cursor.execute("""
         INSERT INTO {} (tablename, syncuntil)
@@ -85,7 +98,7 @@ def job_csv_to_postgres(job, autocommit=True):
             SET syncuntil=EXCLUDED.syncuntil
         """.format(
                 postgres_table_name('__sync')
-            ),(
+            ), (
                 table_name,
                 job_status['systemModstamp']))
 
