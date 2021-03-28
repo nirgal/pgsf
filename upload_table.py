@@ -52,6 +52,7 @@ def csv_split(
 
     headers = None
     buff = ''
+    chunk_nb_lines = 0
 
     for line in csv_reader(csvfilename):
         if headers is None:
