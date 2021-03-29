@@ -1,0 +1,30 @@
+# This is an example configuration file
+# It must be installed as ~/.pgsf
+
+[DEFAULT]
+job_dir = jobs
+log_file = log/pgsf.log
+log_format = %(asctime)-15s - %(levelname)s - {} - %(name)s - %(message)s
+log_level = 10
+
+[salesforce]
+username = my@account.com.sbox
+password = mypassword
+security_token = XXXXXXXXXXXXXXXXXXXXXXXXX
+domain = test
+api_version = 47.0
+
+[postgresql]
+# host = 
+# port = 5432
+# user = 
+# password = 
+
+# Database name:
+db = localdb
+
+# Comment schema to use "public":
+schema = salesforce
+
+# Uncomment to have case sensitive table/column names
+# quote_name = 1
