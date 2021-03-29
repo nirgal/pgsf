@@ -15,7 +15,9 @@ CREDIDENTIALS = {}
 CREDIDENTIALS['username'] = __cfg['salesforce']['username']
 CREDIDENTIALS['password'] = __cfg['salesforce']['password']
 CREDIDENTIALS['security_token'] = __cfg['salesforce']['security_token']
-CREDIDENTIALS['domain'] = __cfg['salesforce']['domain']
+__val = __cfg['salesforce'].get('domain', None)
+if __val:
+    CREDIDENTIALS['domain'] = __val
 
 SF_API_VERSION = __cfg['salesforce']['api_version']
 
