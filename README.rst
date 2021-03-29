@@ -16,7 +16,7 @@ You also need python packages ``simple_salesforce`` and ``salesforce_bulk`` avai
 Setup
 =====
 
-Copy config.py.example to config.py and customize it. This will gave you access.
+Copy pgsf.example to ~/.pgsf and customize it with your Saleforce and Prosgres credentials.
 
 The PostgreSQL database should already be created, with the schemas created. See ``install.sql``
 
@@ -53,6 +53,12 @@ will create a PostgreSQL version of a SF table
    ./csv_to_postgres.py <jobid>
 
 will import the job csv files into a PostgreSQL table.
+
+::
+
+   ./query_poll_table.py Contact
+
+will download only updates, and will import them in the PostgreSQL table.
 
 
 TODO
