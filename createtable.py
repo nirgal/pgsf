@@ -123,6 +123,8 @@ def get_pgsql_create(table_name):
         if tabledesc.is_field_compound(field_name):
             logger.warning('Field %s should be composed/aggregated locally',
                            field_name)
+        if field_name == 'Id' and 'DurableId' in sync_fields.keys():
+            continue  # Ignore 'Id' if 'DurableId' exists
         lines += postgres_coldef_from_sffield(field)
     statements = [
         'CREATE TABLE {} (\n{}\n);'.format(
