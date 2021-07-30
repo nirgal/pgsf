@@ -8,7 +8,20 @@ from config import DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME
 
 
 def connect_string():
-    connect_params = {}
+    # some default values:
+    connect_params = {
+            # seconds of inactivity after which TCP should send a keepalive
+            # message to the server
+            'keepalives_idle': 10,
+
+            # the number of seconds after which a TCP keepalive message that is
+            # not acknowledged by the server should be retransmitted
+            'keepalives_interval': 10,
+
+            # the number of TCP keepalives that can be lost before the client's
+            # connection to the server is considered dead
+            'keepalives_count': 3,
+            }
     if DB_HOST:
         connect_params['host'] = DB_HOST
     if DB_PORT:
