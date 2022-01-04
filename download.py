@@ -100,10 +100,10 @@ def download(job, pool_time=5):
             continue
         filename = (config.JOB_DIR + '/' + job + '/' + batch_id + '.'
                     + job_status['contentType'])
-        with open(filename, 'w') as file:
+        with open(filename, 'wb') as file:
             logger.info('Downloading batch %s', batch_id)
             for chunk in bulk.get_all_results_for_query_batch(batch_id, job):
-                file.write(str(chunk.read(), encoding='utf-8'))
+                file.write(chunk.read())
 
     if job_status['state'] == 'Open':
         logger.info('Closing job')
