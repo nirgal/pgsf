@@ -10,7 +10,7 @@ from tabledesc import TableDesc
 def postgres_type_raw(field):
     sftype = field['type']
     if sftype in (
-            'email', 'encryptedstring', 'id',
+            'combobox', 'email', 'encryptedstring', 'id',
             'phone', 'reference', 'string', 'textarea', 'url'):
         return 'VARCHAR({})'.format(field['length'])
     if sftype in ('picklist', 'multipicklist'):

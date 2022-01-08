@@ -35,7 +35,7 @@ def postgres_json_to_csv(field, value):
     if value is None:
         return ''
     if sftype in (
-            'email', 'encryptedstring', 'id', 'multipicklist',
+            'combobox', 'email', 'encryptedstring', 'id', 'multipicklist',
             'picklist', 'phone', 'reference', 'string', 'textarea', 'url'):
         return _csv_quote(value)
     if sftype == 'anyType':
