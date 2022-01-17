@@ -5,3 +5,5 @@ create table salesforce.__sync (
 	tablename varchar(70) primary key,  -- see EntityDefinition.QualifiedApiName
 	syncuntil timestamp  -- UTC
 );
+
+alter table salesforce.__sync add column refresh_minutes int default 10;
