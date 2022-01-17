@@ -90,12 +90,13 @@ def job_csv_to_postgres(job, autocommit=True):
         logger.critical('%s is empty', table_name)
 
     cursor.execute("""
-        INSERT INTO {} (tablename, syncuntil)
-        VALUES(%s, %s)
+        INSERT INTO {} (tablename, syncuntil, last_refresh)
+        VALUES(%s, %s, current_timestamp at time zone 'UTC')
         ON CONFLICT (tablename)
         DO
             UPDATE
-            SET syncuntil=EXCLUDED.syncuntil
+            SET syncuntil=EXCLUDED.syncuntil,
+                last_refresh=EXCLUDED.last_refresh
         """.format(
                 postgres_table_name('__sync')
             ), (

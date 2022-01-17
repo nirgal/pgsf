@@ -157,19 +157,23 @@ def pg_merge_update(td, tmp_tablename):
         logger.info("pg DELETE rowcount: %s", cursor.rowcount)
 
 
-def mark_synced(td, timestamp):
-    pg = get_pg()
-    cursor = pg.cursor()
-    cursor.execute(
-        'UPDATE {} SET syncuntil=%s WHERE tablename=%s'.format(
-                postgres_table_name('__sync')
-            ), (
-                timestamp.strftime('%Y-%m-%dT%H:%M:%S.%f'),
-                td.name))
-    if cursor.rowcount != 1:
-        raise AssertionError("UPDATE {} failed".format(
-            postgres_table_name('__sync')))
-
+#def mark_synced(td, timestamp):
+#    pg = get_pg()
+#    cursor = pg.cursor()
+#    cursor.execute(
+#        ''''UPDATE {}
+#        SET syncuntil=%s
+#            last_refresh=current_timestamp at time zone 'UTC'
+#        WHERE tablename=%s
+#        '''.format(
+#                postgres_table_name('__sync')
+#            ), (
+#                timestamp.strftime('%Y-%m-%dT%H:%M:%S.%f'),
+#                td.name))
+#    if cursor.rowcount != 1:
+#        raise AssertionError("UPDATE {} failed".format(
+#            postgres_table_name('__sync')))
+#
 
 def sync_table(tablename):
     logger = logging.getLogger(__name__)
@@ -181,6 +185,17 @@ def sync_table(tablename):
     csvfilename = download_changes(td)
     if csvfilename is None:
         logger.info('No change in table %s', tablename)
+
+        sql = '''UPDATE {sync_name}
+                 SET last_refresh=current_timestamp at time zone 'UTC'
+                 WHERE tablename={str_table_name}
+              '''.format(
+                    sync_name=postgres_table_name('__sync'),
+                    str_table_name=postgres_escape_str(td.name),
+                    )
+        cursor.execute(sql)
+        assert cursor.rowcount == 1, "UPDATE sync.status failed"
+
     else:
         logger.debug('Downloaded to %s', csvfilename)
 
@@ -207,7 +222,8 @@ def sync_table(tablename):
                  SET syncuntil=(
                      SELECT max({timefield})
                      FROM {quoted_table_dest}
-                     )
+                     ),
+                     last_refresh=current_timestamp at time zone 'UTC'
                  WHERE tablename={str_table_name}
               '''.format(
                     sync_name=postgres_table_name('__sync'),

@@ -7,3 +7,4 @@ create table salesforce.__sync (
 );
 
 alter table salesforce.__sync add column refresh_minutes int default 10;
+alter table salesforce.__sync add column last_refresh timestamp;
