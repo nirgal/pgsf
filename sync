@@ -15,7 +15,7 @@ touch "$PIDFILE"
 
 DB_HOST=$(python3 -c "import config; print(config.DB_HOST)")
 DB_SCHEMA=$(python3 -c "import config; print(config.DB_SCHEMA)")
-tables=$(psql -c "select tablename from \"$DB_SCHEMA\".__sync where refresh_minutes is not null" --tuples-only "--host=$DB_HOST")
+tables=$(psql -c "select tablename from \"$DB_SCHEMA\".__sync where last_refresh + refresh_minutes * interval '1 minute' < current_timestamp at time zone 'utc'" --tuples-only "--host=$DB_HOST")
 for table in $tables
 do
 	echo "Syncing $table"
