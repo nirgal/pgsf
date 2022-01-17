@@ -181,13 +181,31 @@ def sync_table(tablename):
     pg = get_pg()
     cursor = pg.cursor()
 
+    # Update running status
+    sql = '''UPDATE {sync_name}
+             SET status='running'
+             WHERE tablename={str_table_name}
+             AND status='ready'
+          '''.format(
+                sync_name=postgres_table_name('__sync'),
+                str_table_name=postgres_escape_str(tablename),
+                )
+    cursor.execute(sql)
+    if cursor.rowcount == 0:
+        logger.error('Cannot update __sync')
+        # TODO print the current status
+        return
+    pg.commit()
+
+    cursor = pg.cursor()
     td = TableDesc(tablename)
     csvfilename = download_changes(td)
     if csvfilename is None:
         logger.info('No change in table %s', tablename)
 
         sql = '''UPDATE {sync_name}
-                 SET last_refresh=current_timestamp at time zone 'UTC'
+                 SET last_refresh=current_timestamp at time zone 'UTC',
+                     status='ready'
                  WHERE tablename={str_table_name}
               '''.format(
                     sync_name=postgres_table_name('__sync'),
@@ -223,7 +241,8 @@ def sync_table(tablename):
                      SELECT max({timefield})
                      FROM {quoted_table_dest}
                      ),
-                     last_refresh=current_timestamp at time zone 'UTC'
+                     last_refresh=current_timestamp at time zone 'UTC',
+                     status='ready'
                  WHERE tablename={str_table_name}
               '''.format(
                     sync_name=postgres_table_name('__sync'),

@@ -64,3 +64,8 @@ will download only updates, and will import them in the PostgreSQL table.
 TODO
 ====
 
+Have a single command that runs query_bulk.py + download.py + csv_to_postgres
+
+Check how many records would be fetch by a query_poll_table, and switch to query if it's above a certain limit.
+
+When doing a csv_to_postgres, running queru_poll_table should be killed and __sync status should switch to 'running'.
