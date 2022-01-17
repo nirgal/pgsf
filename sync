@@ -4,24 +4,13 @@
 PGSF_DIR="$(dirname $0)"
 cd "$PGSF_DIR"
 
-PIDFILE=/tmp/pgsf.pid
-if [ -e "$PIDFILE" ]
-then
-	echo "Sync is already running"
-	exit 1
-fi
-
-touch "$PIDFILE"
-
 DB_HOST=$(python3 -c "import config; print(config.DB_HOST)")
 DB_SCHEMA=$(python3 -c "import config; print(config.DB_SCHEMA)")
-tables=$(psql -c "select tablename from \"$DB_SCHEMA\".__sync where last_refresh + refresh_minutes * interval '1 minute' < current_timestamp at time zone 'utc'" --tuples-only "--host=$DB_HOST")
+tables=$(psql -c "select tablename from \"$DB_SCHEMA\".__sync where status='ready' and last_refresh + refresh_minutes * interval '1 minute' < current_timestamp at time zone 'utc'" --tuples-only "--host=$DB_HOST")
 for table in $tables
 do
-	echo "Syncing $table"
+	#echo "Syncing $table"
 	./query_poll_table.py "$table" &
 done
 
 wait
-
-rm "$PIDFILE"
