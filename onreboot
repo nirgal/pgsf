@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# go to directory that script is in
+PGSF_DIR="$(dirname $0)"
+cd "$PGSF_DIR"
+
+DB_HOST=$(python3 -c "import config; print(config.DB_HOST)")
+DB_SCHEMA=$(python3 -c "import config; print(config.DB_SCHEMA)")
+tables=$(psql -c "update \"$DB_SCHEMA\".__sync set status='ready' where status='running'" --host=$DB_HOST")
