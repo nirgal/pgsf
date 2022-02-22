@@ -6,4 +6,4 @@ cd "$PGSF_DIR"
 
 DB_HOST=$(python3 -c "import config; print(config.DB_HOST)")
 DB_SCHEMA=$(python3 -c "import config; print(config.DB_SCHEMA)")
-tables=$(psql -c "update \"$DB_SCHEMA\".__sync set status='ready' where status='running'" --host=$DB_HOST")
+tables=$(psql -c "update \"$DB_SCHEMA\".__sync set status='ready' where status='running'" --host="$DB_HOST")
