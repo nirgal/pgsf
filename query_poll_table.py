@@ -157,64 +157,77 @@ def pg_merge_update(td, tmp_tablename):
         logger.info("pg DELETE rowcount: %s", cursor.rowcount)
 
 
-#def mark_synced(td, timestamp):
-#    pg = get_pg()
-#    cursor = pg.cursor()
-#    cursor.execute(
-#        ''''UPDATE {}
-#        SET syncuntil=%s
-#            last_refresh=current_timestamp at time zone 'UTC'
-#        WHERE tablename=%s
-#        '''.format(
-#                postgres_table_name('__sync')
-#            ), (
-#                timestamp.strftime('%Y-%m-%dT%H:%M:%S.%f'),
-#                td.name))
-#    if cursor.rowcount != 1:
-#        raise AssertionError("UPDATE {} failed".format(
-#            postgres_table_name('__sync')))
-#
-
-def sync_table(tablename):
+def update_sync_table(td, newstatus,
+        update_syncuntil=False, update_last_refresh=False,
+        required_status=None):
+    """
+    Update table salesforce.__sync
+    """
     logger = logging.getLogger(__name__)
 
     pg = get_pg()
     cursor = pg.cursor()
 
-    # Update running status
-    sql = '''UPDATE {sync_name}
-             SET status='running'
-             WHERE tablename={str_table_name}
-             AND status='ready'
-          '''.format(
-                sync_name=postgres_table_name('__sync'),
-                str_table_name=postgres_escape_str(tablename),
+    field_updates={
+            'status': postgres_escape_str(newstatus)
+            }
+    if update_syncuntil:
+        timefield = td.get_timestamp_name()
+        field_updates['syncuntil'] = '''
+            (
+            SELECT max({timefield})
+            FROM {quoted_table_dest}
+            )'''.format(
+                    timefield=postgres_escape_name(timefield),
+                    quoted_table_dest=postgres_table_name(td.name),
                 )
+    if update_last_refresh:
+        field_updates['last_refresh'] = "current_timestamp at time zone 'UTC'"
+
+    sync_name = postgres_table_name('__sync')
+    updates = ','.join([ f'{key}={value}'
+                         for key, value
+                         in field_updates.items()])
+    quoted_tablename = postgres_escape_str(f'{td.name}')
+    if required_status is not None:
+        required_status_esc = postgres_escape_str(required_status)
+        andcondition = f"AND status={required_status_esc}"
+    else:
+        andcondition = ''
+
+    sql = f'''UPDATE {sync_name}
+        SET {updates}
+        WHERE tablename={quoted_tablename}
+            {andcondition}
+        '''
+
+    #print(sql)
     cursor.execute(sql)
     if cursor.rowcount == 0:
         logger.error('Cannot update __sync')
         # TODO print the current status
-        return
     pg.commit()
 
-    cursor = pg.cursor()
-    td = TableDesc(tablename)
-    csvfilename = download_changes(td)
-    if csvfilename is None:
-        logger.info('No change in table %s', tablename)
 
-        sql = '''UPDATE {sync_name}
-                 SET last_refresh=current_timestamp at time zone 'UTC',
-                     status='ready'
-                 WHERE tablename={str_table_name}
-              '''.format(
-                    sync_name=postgres_table_name('__sync'),
-                    str_table_name=postgres_escape_str(td.name),
-                    )
-        cursor.execute(sql)
-        assert cursor.rowcount == 1, "UPDATE sync.status failed"
+
+def sync_table(tablename):
+    logger = logging.getLogger(__name__)
+
+    td = TableDesc(tablename)
+
+    update_sync_table(td, 'running', required_status='ready')
+
+    csvfilename = download_changes(td)
+
+    if csvfilename is None:
+        logger.info('No change in table %s')
+
+        update_sync_table(td, 'ready', update_last_refresh=True)
 
     else:
+        pg = get_pg()
+        cursor = pg.cursor()
+
         logger.debug('Downloaded to %s', csvfilename)
 
         tmp_tablename = 'tmp_' + tablename
@@ -235,25 +248,11 @@ def sync_table(tablename):
             postgres_table_name(tmp_tablename, schema=''))
         cursor.execute(sql)
 
-        timefield = td.get_timestamp_name()
-        sql = '''UPDATE {sync_name}
-                 SET syncuntil=(
-                     SELECT max({timefield})
-                     FROM {quoted_table_dest}
-                     ),
-                     last_refresh=current_timestamp at time zone 'UTC',
-                     status='ready'
-                 WHERE tablename={str_table_name}
-              '''.format(
-                    sync_name=postgres_table_name('__sync'),
-                    timefield=postgres_escape_name(timefield),
-                    quoted_table_dest=postgres_table_name(td.name),
-                    str_table_name=postgres_escape_str(td.name),
-                    )
-        cursor.execute(sql)
-        assert cursor.rowcount == 1, "UPDATE sync.status failed"
+        update_sync_table(td, 'ready',
+                update_syncuntil=True,
+                update_last_refresh=True)
 
-    pg.commit()
+        pg.commit()
 
 
 if __name__ == '__main__':
