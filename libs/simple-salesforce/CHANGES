@@ -1,0 +1,77 @@
+v1.0.0
+======
+
+Other
+-----
+
+- [362] Increased default Salesforce API Version to 42.0
+- [360] Remove depreciated interfaces
+- [358] Removed support for Python 2.6, 2.7, 3.3, and 3.4
+- [359] Make the minimum version of requests v 2.22.0, allowing us to
+  remove requests[security]
+- Changed "Beta" classifier to "Production/Stable"
+
+
+v0.75
+=====
+
+Features
+--------
+- [305] Support for JWT Bearer Token workflow
+
+
+v0.73.4
+=====
+
+Features
+--------
+- [316] Added ability for multi-batch processing
+
+v0.72
+=====
+
+Bugs
+----
+- [134] query_all changed to be non-recursive due to recursion limit being
+  hit for large result sets.
+
+
+v0.71
+=====
+
+Features
+--------
+- [131] Added the ability to pass custom headers through to requests
+
+
+v0.70
+=====
+
+Features
+--------
+- [98] Requests session objects are now shared between SFType instances and
+  the parent Salesforce object
+
+
+v0.69
+=====
+
+Features
+--------
+- [103] Require requests[secure] to allow for system openssl, which will allow
+  for TLSv1.2 in Python < 2.7.9 assuming system openssl is newer than Python's.
+
+Other
+-----
+- Replaced httpretty with responses for unit tests due to SSL-related errors
+  in httpretty.
+
+
+v0.68.2
+=======
+
+Other
+-----
+- [85] Added tox support, updated travis-ci config
+- Added CHANGES file
+- [97] _call_salesforce is now used consistently across API
