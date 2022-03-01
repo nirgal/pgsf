@@ -4,8 +4,6 @@ import argparse
 import logging
 from datetime import datetime, timedelta
 
-from psycopg2 import DatabaseError
-
 import config
 from createtable import (postgres_escape_name, postgres_escape_str,
                          postgres_table_name)
@@ -217,42 +215,49 @@ def sync_table(tablename):
 
     update_sync_table(td, 'running', required_status='ready')
 
-    csvfilename = download_changes(td)
+    try:
+        csvfilename = download_changes(td)
 
-    if csvfilename is None:
-        logger.info('No change in table %s')
+        if csvfilename is None:
+            logger.info('No change in table %s')
 
-        update_sync_table(td, 'ready', update_last_refresh=True)
+            update_sync_table(td, 'ready', update_last_refresh=True)
 
-    else:
-        pg = get_pg()
-        cursor = pg.cursor()
+        else:
+            pg = get_pg()
+            cursor = pg.cursor()
 
-        logger.debug('Downloaded to %s', csvfilename)
+            logger.debug('Downloaded to %s', csvfilename)
 
-        tmp_tablename = 'tmp_' + tablename
-        sql = 'CREATE TEMPORARY TABLE {} ( LIKE {} )'.format(
-            postgres_table_name(tmp_tablename, schema=''),
-            postgres_table_name(tablename))
+            tmp_tablename = 'tmp_' + tablename
+            sql = 'CREATE TEMPORARY TABLE {} ( LIKE {} )'.format(
+                postgres_table_name(tmp_tablename, schema=''),
+                postgres_table_name(tablename))
 
-        cursor.execute(sql)
+            cursor.execute(sql)
 
-        sql = get_pgsql_import(td, csvfilename, tmp_tablename, schema='')
-        with open(csvfilename) as file:
-            cursor.copy_expert(sql, file)
-            logger.info("pg COPY rowcount: %s", cursor.rowcount)
+            sql = get_pgsql_import(td, csvfilename, tmp_tablename, schema='')
+            with open(csvfilename) as file:
+                cursor.copy_expert(sql, file)
+                logger.info("pg COPY rowcount: %s", cursor.rowcount)
 
-        pg_merge_update(td, tmp_tablename)
+            pg_merge_update(td, tmp_tablename)
 
-        sql = 'DROP TABLE {}'.format(
-            postgres_table_name(tmp_tablename, schema=''))
-        cursor.execute(sql)
+            sql = 'DROP TABLE {}'.format(
+                postgres_table_name(tmp_tablename, schema=''))
+            cursor.execute(sql)
 
-        update_sync_table(td, 'ready',
-                update_syncuntil=True,
-                update_last_refresh=True)
+            update_sync_table(td, 'ready',
+                    update_syncuntil=True,
+                    update_last_refresh=True)
 
-        pg.commit()
+            pg.commit()
+    except Exception as e:
+        # Re-raise exception, so that stderr as a message
+        # cron will mail it
+        # TODO: detect some errors like a column that disapeared
+        update_sync_table(td, 'ready')
+        raise e
 
 
 if __name__ == '__main__':
