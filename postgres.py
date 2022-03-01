@@ -4,7 +4,8 @@ import logging
 
 import psycopg2
 
-from config import DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME
+from config import (DB_HOST, DB_NAME, DB_PASSWORD, DB_PORT, DB_QUOTE_NAMES,
+                    DB_SCHEMA, DB_USER)
 
 
 def connect_string():
@@ -60,3 +61,38 @@ def set_autocommit(autocommit):
     '''
     pg = get_pg()
     pg.set_session(autocommit=autocommit)
+
+
+def pg_escape_str(text):
+    '''
+    Quote a text, doubling the quote when needed
+    '''
+    return "'" + text.replace("'", "''") + "'"
+
+
+def pg_escape_name(name):
+    '''
+    if DB_QUOTE_NAMES is set in config, quote the name
+    '''
+    assert '"' not in name
+    if DB_QUOTE_NAMES:
+        return '"' + name + '"'
+    return name
+
+
+def pg_table_name(name, schema=None):
+    '''
+    leave schema empty for using config
+    usage is temporary tables ( psycopg2.errors.InvalidTableDefinition:
+            cannot create temporary relation in non-temporary schema)
+    '''
+    if schema is None:
+        schema = DB_SCHEMA
+
+    if schema:
+        result = pg_escape_name(schema)
+        result += '.'
+    else:
+        result = ''
+    result += pg_escape_name(name)
+    return result

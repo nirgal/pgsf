@@ -4,6 +4,7 @@ import argparse
 import logging
 
 import config
+from postgres import pg_escape_name, pg_escape_str, pg_table_name
 from tabledesc import TableDesc
 
 
@@ -32,38 +33,9 @@ def postgres_type_raw(field):
     return '"{}" NOT IMPLEMENTED '.format(sftype)
 
 
-def postgres_escape_str(text):
-    return "'" + text.replace("'", "''") + "'"
-
-
-def postgres_escape_name(name):
-    assert '"' not in name
-    if config.DB_QUOTE_NAMES:
-        return '"' + name + '"'
-    return name
-
-
-def postgres_table_name(name, schema=None):
-    """
-    leave schema empty for using config
-    usage is temporary tables ( psycopg2.errors.InvalidTableDefinition:
-            cannot create temporary relation in non-temporary schema)
-    """
-    if schema is None:
-        schema = config.DB_SCHEMA
-
-    if schema:
-        result = postgres_escape_name(schema)
-        result += '.'
-    else:
-        result = ''
-    result += postgres_escape_name(name)
-    return result
-
-
 def postgres_const(value):
     if isinstance(value, str):
-        return postgres_escape_str(value)
+        return pg_escape_str(value)
     if isinstance(value, bool):
         return 'TRUE' if value else 'FALSE'
     if isinstance(value, (int, float)):
@@ -80,19 +52,19 @@ def postgres_coldef_from_sffield(field):
         if base_name.endswith('Address'):
             base_name = base_name[:-7]  # remove suffix
         return [
-            ' {} {}'.format(postgres_escape_name(base_name+'Street'),
+            ' {} {}'.format(pg_escape_name(base_name+'Street'),
                             'VARCHAR(255)'),
-            ' {} {}'.format(postgres_escape_name(base_name+'City'),
+            ' {} {}'.format(pg_escape_name(base_name+'City'),
                             'VARCHAR(40)'),
-            ' {} {}'.format(postgres_escape_name(base_name+'State'),
+            ' {} {}'.format(pg_escape_name(base_name+'State'),
                             'VARCHAR(80)'),
-            ' {} {}'.format(postgres_escape_name(base_name+'PostalCode'),
+            ' {} {}'.format(pg_escape_name(base_name+'PostalCode'),
                             'VARCHAR(20)'),
-            ' {} {}'.format(postgres_escape_name(base_name+'Country'),
+            ' {} {}'.format(pg_escape_name(base_name+'Country'),
                             'VARCHAR(80)'),
-            ' {} {}'.format(postgres_escape_name(base_name+'Latitude'),
+            ' {} {}'.format(pg_escape_name(base_name+'Latitude'),
                             'DOUBLE PRECISION'),
-            ' {} {}'.format(postgres_escape_name(base_name+'Longitude'),
+            ' {} {}'.format(pg_escape_name(base_name+'Longitude'),
                             'DOUBLE PRECISION'),
             ]
     pgtype = postgres_type_raw(field)
@@ -105,7 +77,7 @@ def postgres_coldef_from_sffield(field):
             pgtype += ' DEFAULT ' + postgres_const(field['defaultValue'])
         if field['unique']:
             pgtype += ' UNIQUE'
-    return [' {} {}'.format(postgres_escape_name(field_name), pgtype)]
+    return [' {} {}'.format(pg_escape_name(field_name), pgtype)]
 
 
 def get_pgsql_create(table_name):
@@ -128,7 +100,7 @@ def get_pgsql_create(table_name):
         lines += postgres_coldef_from_sffield(field)
     statements = [
         'CREATE TABLE {} (\n{}\n);'.format(
-            postgres_table_name(table_name),
+            pg_table_name(table_name),
             ',\n'.join(lines))
         ]
 
@@ -141,10 +113,10 @@ def get_pgsql_create(table_name):
         if field.get('IsIndexed'):
             statements.append(
                 'CREATE INDEX {} ON {} ({});'.format(
-                    postgres_escape_name('{}_{}_idx'.format(
+                    pg_escape_name('{}_{}_idx'.format(
                             table_name, field_name)),
-                    postgres_table_name(table_name),
-                    postgres_escape_name(field_name)))
+                    pg_table_name(table_name),
+                    pg_escape_name(field_name)))
     return statements
 
 

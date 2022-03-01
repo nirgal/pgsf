@@ -5,10 +5,8 @@ import logging
 from datetime import datetime
 
 import config
-from createtable import (postgres_escape_name, postgres_escape_str,
-                         postgres_table_name)
 from csv_to_postgres import get_pgsql_import
-from postgres import get_pg
+from postgres import get_pg, pg_escape_name, pg_escape_str, pg_table_name
 from query import query
 from tabledesc import TableDesc
 
@@ -63,7 +61,7 @@ def download_changes(td):
     cursor = pg.cursor()
     cursor.execute(
         'SELECT syncuntil FROM {} WHERE tablename=%s'.format(
-            postgres_table_name('__sync')
+            pg_table_name('__sync')
         ), (
             td.name,
         ))
@@ -113,12 +111,12 @@ def pg_merge_update(td, tmp_tablename):
 
     fieldnames = td.get_sync_field_names()
     has_isdeleted = 'IsDeleted' in fieldnames
-    quoted_table_dest = postgres_table_name(td.name)
-    quoted_table_src = postgres_table_name(tmp_tablename, schema='')
+    quoted_table_dest = pg_table_name(td.name)
+    quoted_table_src = pg_table_name(tmp_tablename, schema='')
     quoted_field_names = ','.join(
-            [postgres_escape_name(f) for f in fieldnames])
+            [pg_escape_name(f) for f in fieldnames])
     excluded_quoted_field_names = ','.join(
-            ['EXCLUDED.'+postgres_escape_name(f) for f in fieldnames])
+            ['EXCLUDED.'+pg_escape_name(f) for f in fieldnames])
     sql = '''INSERT INTO {quoted_table_dest}
              ( {quoted_field_names} )
              SELECT {quoted_field_names}
@@ -132,7 +130,7 @@ def pg_merge_update(td, tmp_tablename):
             quoted_table_dest=quoted_table_dest,
             quoted_table_src=quoted_table_src,
             quoted_field_names=quoted_field_names,
-            id=postgres_escape_name(td.get_pk_fieldname()),
+            id=pg_escape_name(td.get_pk_fieldname()),
             excluded_quoted_field_names=excluded_quoted_field_names,
             wherenotdeleted='WHERE NOT "IsDeleted"' if has_isdeleted else ''
             )
@@ -149,7 +147,7 @@ def pg_merge_update(td, tmp_tablename):
               '''.format(
               quoted_table_dest=quoted_table_dest,
               quoted_table_src=quoted_table_src,
-              id=postgres_escape_name(td.get_pk_fieldname()),
+              id=pg_escape_name(td.get_pk_fieldname()),
               )
         cursor.execute(sql)
         logger.info("pg DELETE rowcount: %s", cursor.rowcount)
@@ -167,7 +165,7 @@ def update_sync_table(td, newstatus,
     cursor = pg.cursor()
 
     field_updates = {
-            'status': postgres_escape_str(newstatus)
+            'status': pg_escape_str(newstatus)
             }
     if update_syncuntil:
         timefield = td.get_timestamp_name()
@@ -176,19 +174,19 @@ def update_sync_table(td, newstatus,
             SELECT max({timefield})
             FROM {quoted_table_dest}
             )'''.format(
-                    timefield=postgres_escape_name(timefield),
-                    quoted_table_dest=postgres_table_name(td.name),
+                    timefield=pg_escape_name(timefield),
+                    quoted_table_dest=pg_table_name(td.name),
                 )
     if update_last_refresh:
         field_updates['last_refresh'] = "current_timestamp at time zone 'UTC'"
 
-    sync_name = postgres_table_name('__sync')
+    sync_name = pg_table_name('__sync')
     updates = ','.join([f'{key}={value}'
                         for key, value
                         in field_updates.items()])
-    quoted_tablename = postgres_escape_str(f'{td.name}')
+    quoted_tablename = pg_escape_str(f'{td.name}')
     if required_status is not None:
-        required_status_esc = postgres_escape_str(required_status)
+        required_status_esc = pg_escape_str(required_status)
         andcondition = f"AND status={required_status_esc}"
     else:
         andcondition = ''
@@ -230,8 +228,8 @@ def sync_table(tablename):
 
             tmp_tablename = 'tmp_' + tablename
             sql = 'CREATE TEMPORARY TABLE {} ( LIKE {} )'.format(
-                postgres_table_name(tmp_tablename, schema=''),
-                postgres_table_name(tablename))
+                pg_table_name(tmp_tablename, schema=''),
+                pg_table_name(tablename))
 
             cursor.execute(sql)
 
@@ -243,7 +241,7 @@ def sync_table(tablename):
             pg_merge_update(td, tmp_tablename)
 
             sql = 'DROP TABLE {}'.format(
-                postgres_table_name(tmp_tablename, schema=''))
+                pg_table_name(tmp_tablename, schema=''))
             cursor.execute(sql)
 
             update_sync_table(

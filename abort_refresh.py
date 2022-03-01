@@ -7,8 +7,7 @@ import sys
 import psutil
 
 import config
-from createtable import postgres_table_name
-from postgres import get_pg
+from postgres import get_pg, pg_table_name
 from query_poll_table import update_sync_table
 from tabledesc import TableDesc
 
@@ -20,7 +19,7 @@ def get_sync_status(tablename):
 
     cursor.execute(
         'SELECT status FROM {} WHERE tablename=%s'.format(
-            postgres_table_name('__sync')
+            pg_table_name('__sync')
         ), (
             tablename,
         ))
