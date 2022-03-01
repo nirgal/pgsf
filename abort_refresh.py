@@ -8,28 +8,8 @@ import psutil
 
 import config
 from postgres import get_pg, pg_table_name
-from query_poll_table import update_sync_table
+from synctable import get_sync_status, update_sync_table
 from tabledesc import TableDesc
-
-
-def get_sync_status(tablename):
-    logger = logging.getLogger(__name__)
-    pg = get_pg()
-    cursor = pg.cursor()
-
-    cursor.execute(
-        'SELECT status FROM {} WHERE tablename=%s'.format(
-            pg_table_name('__sync')
-        ), (
-            tablename,
-        ))
-
-    line = cursor.fetchone()
-    if line is None:
-        logger.error(f'TABLE {tablename} not found in __sync')
-        return None
-
-    return line[0]
 
 
 def find_refresh_process(tablename, sync_check=True):

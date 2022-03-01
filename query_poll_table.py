@@ -6,8 +6,9 @@ from datetime import datetime
 
 import config
 from csv_to_postgres import get_pgsql_import
-from postgres import get_pg, pg_escape_name, pg_escape_str, pg_table_name
+from postgres import get_pg, pg_escape_name, pg_table_name
 from query import query
+from synctable import update_sync_table
 from tabledesc import TableDesc
 
 
@@ -151,58 +152,6 @@ def pg_merge_update(td, tmp_tablename):
               )
         cursor.execute(sql)
         logger.info("pg DELETE rowcount: %s", cursor.rowcount)
-
-
-def update_sync_table(td, newstatus,
-                      update_syncuntil=False, update_last_refresh=False,
-                      required_status=None):
-    """
-    Update table salesforce.__sync
-    """
-    logger = logging.getLogger(__name__)
-
-    pg = get_pg()
-    cursor = pg.cursor()
-
-    field_updates = {
-            'status': pg_escape_str(newstatus)
-            }
-    if update_syncuntil:
-        timefield = td.get_timestamp_name()
-        field_updates['syncuntil'] = '''
-            (
-            SELECT max({timefield})
-            FROM {quoted_table_dest}
-            )'''.format(
-                    timefield=pg_escape_name(timefield),
-                    quoted_table_dest=pg_table_name(td.name),
-                )
-    if update_last_refresh:
-        field_updates['last_refresh'] = "current_timestamp at time zone 'UTC'"
-
-    sync_name = pg_table_name('__sync')
-    updates = ','.join([f'{key}={value}'
-                        for key, value
-                        in field_updates.items()])
-    quoted_tablename = pg_escape_str(f'{td.name}')
-    if required_status is not None:
-        required_status_esc = pg_escape_str(required_status)
-        andcondition = f"AND status={required_status_esc}"
-    else:
-        andcondition = ''
-
-    sql = f'''UPDATE {sync_name}
-        SET {updates}
-        WHERE tablename={quoted_tablename}
-            {andcondition}
-        '''
-
-    # print(sql)
-    cursor.execute(sql)
-    if cursor.rowcount == 0:
-        logger.error('Cannot update __sync')
-        # TODO print the current status
-    pg.commit()
 
 
 def sync_table(tablename):

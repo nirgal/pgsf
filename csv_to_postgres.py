@@ -5,8 +5,9 @@ import json
 import logging
 
 import config
-#from abort_refresh import kill_refresh
+from abort_refresh import kill_refresh
 from postgres import pg_escape_name, pg_table_name
+from postgres import get_pg, set_autocommit
 from tabledesc import TableDesc
 
 
@@ -54,9 +55,8 @@ def job_csv_to_postgres(job, autocommit=True):
 
     table_name = job_status['object']
 
-    #kill_refresh(kill_refresh, sync_check=False)
+    kill_refresh(kill_refresh, sync_check=False)
 
-    from postgres import get_pg, set_autocommit
     pg = get_pg()
     if autocommit:
         set_autocommit(True)
