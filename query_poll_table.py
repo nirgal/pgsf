@@ -2,7 +2,7 @@
 
 import argparse
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import config
 from createtable import (postgres_escape_name, postgres_escape_str,
@@ -156,8 +156,8 @@ def pg_merge_update(td, tmp_tablename):
 
 
 def update_sync_table(td, newstatus,
-        update_syncuntil=False, update_last_refresh=False,
-        required_status=None):
+                      update_syncuntil=False, update_last_refresh=False,
+                      required_status=None):
     """
     Update table salesforce.__sync
     """
@@ -166,7 +166,7 @@ def update_sync_table(td, newstatus,
     pg = get_pg()
     cursor = pg.cursor()
 
-    field_updates={
+    field_updates = {
             'status': postgres_escape_str(newstatus)
             }
     if update_syncuntil:
@@ -183,9 +183,9 @@ def update_sync_table(td, newstatus,
         field_updates['last_refresh'] = "current_timestamp at time zone 'UTC'"
 
     sync_name = postgres_table_name('__sync')
-    updates = ','.join([ f'{key}={value}'
-                         for key, value
-                         in field_updates.items()])
+    updates = ','.join([f'{key}={value}'
+                        for key, value
+                        in field_updates.items()])
     quoted_tablename = postgres_escape_str(f'{td.name}')
     if required_status is not None:
         required_status_esc = postgres_escape_str(required_status)
@@ -199,13 +199,12 @@ def update_sync_table(td, newstatus,
             {andcondition}
         '''
 
-    #print(sql)
+    # print(sql)
     cursor.execute(sql)
     if cursor.rowcount == 0:
         logger.error('Cannot update __sync')
         # TODO print the current status
     pg.commit()
-
 
 
 def sync_table(tablename):
@@ -247,7 +246,8 @@ def sync_table(tablename):
                 postgres_table_name(tmp_tablename, schema=''))
             cursor.execute(sql)
 
-            update_sync_table(td, 'ready',
+            update_sync_table(
+                    td, 'ready',
                     update_syncuntil=True,
                     update_last_refresh=True)
 
