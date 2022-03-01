@@ -53,6 +53,9 @@ def job_csv_to_postgres(job, autocommit=True):
 
     table_name = job_status['object']
 
+    # TODO
+    # kill_refresh(kill_refresh, sync_check=False)
+
     from postgres import get_pg, set_autocommit
     pg = get_pg()
     if autocommit:

@@ -55,6 +55,23 @@ def find_refresh_process(tablename, sync_check=True):
             return proc
 
 
+def kill_refresh(tablename, sync_check=True):
+    logger = logging.getLogger(__name__)
+
+    td = TableDesc(tablename)
+
+    proc = find_refresh_process(tablename, sync_check)
+    if not proc:
+        logger.error('Process not found')
+        return False
+
+    update_sync_table(td, 'error')
+
+    proc.kill()
+
+    return True
+
+
 if __name__ == '__main__':
     def main():
         parser = argparse.ArgumentParser(
@@ -78,20 +95,7 @@ if __name__ == '__main__':
         tablename = args.table
         sync_check = not args.no_check_sync
 
-        logger = logging.getLogger(__name__)
-
-        td = TableDesc(tablename)
-
-        proc = find_refresh_process(tablename, sync_check)
-        if not proc:
-            logger.error('Process not found')
-            print('Process not found', file=sys.stderr)
-            return 1
-
-        print(proc)
-
-        update_sync_table(td, 'error')
-
-        proc.kill()
+        if not kill_refresh(tablename, sync_check):
+            print('Failed', file=sys.stderr)
 
     main()
