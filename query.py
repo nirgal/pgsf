@@ -2,16 +2,18 @@
 
 import argparse
 import logging
-#from concurrent.futures import ThreadPoolExecutor
 
 import config
 from salesforce import get_Salesforce
 from simple_salesforce.exceptions import SalesforceMalformedRequest
 
+# from concurrent.futures import ThreadPoolExecutor
+
+
 logger = logging.getLogger(__name__)
 
 
-#def query_cb(soql, chunk_callback, include_deleted=False):
+# def query_cb(soql, chunk_callback, include_deleted=False):
 
 def _check_result(res):
     known_attributes = ('done', 'nextRecordsUrl', 'records', 'totalSize')
@@ -24,7 +26,11 @@ def updated(tablename, start, end):
     sf = get_Salesforce()
     return sf.__getattr__(tablename).updated(start, end)
 # from datetime import datetime, timezone
-# print(updated('Contact', datetime(2020, 11, 23, 0, 0, 0, tzinfo=timezone.utc), datetime(2099,12,31,0,0,0,tzinfo=timezone.utc)))
+# print(
+#   updated(
+#       'Contact',
+#       datetime(2020, 11, 23, 0, 0, 0, tzinfo=timezone.utc),
+#       datetime(2099,12,31,0,0,0,tzinfo=timezone.utc)))
 
 
 def query(soql, include_deleted=False):
@@ -76,7 +82,7 @@ if __name__ == '__main__':
                 'soql',
                 help='the query to tun')
         # exemple:
-        # SELECT COUNT() FROM Campaign WHERE SystemModStamp>2019-12-18T11:14:55Z
+        # SELECT COUNT() FROM User WHERE SystemModStamp>2019-12-18T11:14:55Z
         args = parser.parse_args()
 
         logging.basicConfig(

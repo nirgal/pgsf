@@ -2,14 +2,16 @@
 
 import argparse
 import logging
-import psutil
 import sys
+
+import psutil
 
 import config
 from createtable import postgres_table_name
-from tabledesc import TableDesc
 from postgres import get_pg
 from query_poll_table import update_sync_table
+from tabledesc import TableDesc
+
 
 def get_sync_status(tablename):
     logger = logging.getLogger(__name__)
@@ -41,14 +43,15 @@ def find_refresh_process(tablename, sync_check=True):
             return
     else:
         logger.debug('Skipping sync table checks')
-        
+
     for proc in psutil.process_iter():
         cmdline = proc.cmdline()
-        if (len(cmdline) >= 3
+        if (
+                len(cmdline) >= 3
                 and 'python' in cmdline[0]
                 and 'query_poll_table' in cmdline[1]
                 and cmdline[2] == tablename
-                ):
+           ):
             return proc
 
 
@@ -64,7 +67,7 @@ if __name__ == '__main__':
                 '--no-check-sync',
                 default=False, action='store_true',
                 help="Don't check __sync table")
-        
+
         args = parser.parse_args()
 
         logging.basicConfig(
