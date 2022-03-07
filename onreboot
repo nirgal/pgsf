@@ -7,4 +7,16 @@ cd "$PGSF_DIR"
 DB_HOST=$(python3 -c "import config; print(config.DB_HOST)")
 DB_USER=$(python3 -c "import config; print(config.DB_USER)")
 DB_SCHEMA=$(python3 -c "import config; print(config.DB_SCHEMA)")
-psql -c "update \"$DB_SCHEMA\".__sync set status='ready' where status='running'" --host="$DB_HOST" "--user=$DB_USER"
+
+TRY=0
+while [[ $TRY != 10 ]]
+do
+	psql -c "uupdate \"$DB_SCHEMA\".__sync set status='ready' where status='running'" --host="$DB_HOST" "--user=$DB_USER"
+	if [[ $? == 0 ]]
+	then
+		exit 0
+	fi
+	echo "psql failed. Retying..." >&2
+	sleep 10
+	TRY=$(( $TRY + 1 ))
+done
