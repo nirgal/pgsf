@@ -30,6 +30,7 @@ DB_NAME = __cfg['postgresql'].get('db', None)
 DB_SCHEMA = __cfg['postgresql'].get('schema', None)
 
 DB_QUOTE_NAMES = __cfg['postgresql'].getboolean('quote_name', False)
+GRANT_TO = __cfg['postgresql'].get('grant_to', None)
 
 JOB_DIR = __cfg['DEFAULT']['job_dir']
 

@@ -80,7 +80,7 @@ def postgres_coldef_from_sffield(field):
     return [' {} {}'.format(pg_escape_name(field_name), pgtype)]
 
 
-def get_pgsql_create(table_name):
+def get_pgsql_create(table_name, grant_to=None):
     logger = logging.getLogger(__name__)
     logger.debug('Analyzing %s', table_name)
 
@@ -117,6 +117,9 @@ def get_pgsql_create(table_name):
                             table_name, field_name)),
                     pg_table_name(table_name),
                     pg_escape_name(field_name)))
+    if grant_to is not None:
+        statements.append('GRANT SELECT ON {} TO {};'.format(
+            pg_table_name(table_name), grant_to))
     return statements
 
 
@@ -129,6 +132,10 @@ if __name__ == '__main__':
                 default=False, action='store_true',
                 help='only print the sql statement to stdout')
         parser.add_argument(
+                '--grant-to',
+                default=config.GRANT_TO,
+                help='grant select to this table')
+        parser.add_argument(
                 'table',
                 help='table to create in postgresql')
         args = parser.parse_args()
@@ -138,7 +145,7 @@ if __name__ == '__main__':
                 format=config.LOGFORMAT.format('createtable '+args.table),
                 level=config.LOGLEVEL)
 
-        sql = get_pgsql_create(args.table)
+        sql = get_pgsql_create(args.table, args.grant_to)
         if args.dry_run:
             for line in sql:
                 print(line)

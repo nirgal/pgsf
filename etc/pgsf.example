@@ -26,5 +26,8 @@ db = localdb
 # Comment schema to use "public":
 schema = salesforce
 
+# default grant to when create new table
+# grant_to = sfuser
+
 # Uncomment to have case sensitive table/column names
 # quote_name = 1
