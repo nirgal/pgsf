@@ -54,6 +54,20 @@ def get_conn():
         return __pg_connection
 
 
+def cursor():
+    '''
+    Simple wrapper around cursor() for the one connection
+    '''
+    return get_conn().cursor()
+
+
+def commit():
+    '''
+    Simple wrapper around commit for the one connection
+    '''
+    return get_conn().commit()
+
+
 def set_autocommit(autocommit):
     '''
     Simple wrapper to set autocommit mode
@@ -63,14 +77,14 @@ def set_autocommit(autocommit):
     conn.set_session(autocommit=autocommit)
 
 
-def pg_escape_str(text):
+def escape_str(text):
     '''
     Quote a text, doubling the quote when needed
     '''
     return "'" + text.replace("'", "''") + "'"
 
 
-def pg_escape_name(name):
+def escape_name(name):
     '''
     if DB_QUOTE_NAMES is set in config, quote the name
     '''
@@ -80,7 +94,7 @@ def pg_escape_name(name):
     return name
 
 
-def pg_table_name(name, schema=None):
+def table_name(name, schema=None):
     '''
     leave schema empty for using config
     usage is temporary tables ( psycopg2.errors.InvalidTableDefinition:
@@ -90,9 +104,9 @@ def pg_table_name(name, schema=None):
         schema = DB_SCHEMA
 
     if schema:
-        result = pg_escape_name(schema)
+        result = escape_name(schema)
         result += '.'
     else:
         result = ''
-    result += pg_escape_name(name)
+    result += escape_name(name)
     return result

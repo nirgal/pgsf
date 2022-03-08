@@ -3,8 +3,10 @@
 import argparse
 import logging
 
+import psycopg2
+
 import config
-from postgres import pg_escape_name, pg_escape_str, pg_table_name
+import postgres as pg
 from tabledesc import TableDesc
 
 
@@ -35,7 +37,7 @@ def postgres_type_raw(field):
 
 def postgres_const(value):
     if isinstance(value, str):
-        return pg_escape_str(value)
+        return pg.escape_str(value)
     if isinstance(value, bool):
         return 'TRUE' if value else 'FALSE'
     if isinstance(value, (int, float)):
@@ -52,19 +54,19 @@ def postgres_coldef_from_sffield(field):
         if base_name.endswith('Address'):
             base_name = base_name[:-7]  # remove suffix
         return [
-            ' {} {}'.format(pg_escape_name(base_name+'Street'),
+            ' {} {}'.format(pg.escape_name(base_name+'Street'),
                             'VARCHAR(255)'),
-            ' {} {}'.format(pg_escape_name(base_name+'City'),
+            ' {} {}'.format(pg.escape_name(base_name+'City'),
                             'VARCHAR(40)'),
-            ' {} {}'.format(pg_escape_name(base_name+'State'),
+            ' {} {}'.format(pg.escape_name(base_name+'State'),
                             'VARCHAR(80)'),
-            ' {} {}'.format(pg_escape_name(base_name+'PostalCode'),
+            ' {} {}'.format(pg.escape_name(base_name+'PostalCode'),
                             'VARCHAR(20)'),
-            ' {} {}'.format(pg_escape_name(base_name+'Country'),
+            ' {} {}'.format(pg.escape_name(base_name+'Country'),
                             'VARCHAR(80)'),
-            ' {} {}'.format(pg_escape_name(base_name+'Latitude'),
+            ' {} {}'.format(pg.escape_name(base_name+'Latitude'),
                             'DOUBLE PRECISION'),
-            ' {} {}'.format(pg_escape_name(base_name+'Longitude'),
+            ' {} {}'.format(pg.escape_name(base_name+'Longitude'),
                             'DOUBLE PRECISION'),
             ]
     pgtype = postgres_type_raw(field)
@@ -77,7 +79,7 @@ def postgres_coldef_from_sffield(field):
             pgtype += ' DEFAULT ' + postgres_const(field['defaultValue'])
         if field['unique']:
             pgtype += ' UNIQUE'
-    return [' {} {}'.format(pg_escape_name(field_name), pgtype)]
+    return [' {} {}'.format(pg.escape_name(field_name), pgtype)]
 
 
 def get_pgsql_create(table_name, grant_to=None):
@@ -100,7 +102,7 @@ def get_pgsql_create(table_name, grant_to=None):
         lines += postgres_coldef_from_sffield(field)
     statements = [
         'CREATE TABLE {} (\n{}\n);'.format(
-            pg_table_name(table_name),
+            pg.table_name(table_name),
             ',\n'.join(lines))
         ]
 
@@ -113,13 +115,13 @@ def get_pgsql_create(table_name, grant_to=None):
         if field.get('IsIndexed'):
             statements.append(
                 'CREATE INDEX {} ON {} ({});'.format(
-                    pg_escape_name('{}_{}_idx'.format(
+                    pg.escape_name('{}_{}_idx'.format(
                             table_name, field_name)),
-                    pg_table_name(table_name),
-                    pg_escape_name(field_name)))
+                    pg.table_name(table_name),
+                    pg.escape_name(field_name)))
     if grant_to is not None:
         statements.append('GRANT SELECT ON {} TO {};'.format(
-            pg_table_name(table_name), grant_to))
+            pg.table_name(table_name), grant_to))
     return statements
 
 
@@ -150,15 +152,13 @@ if __name__ == '__main__':
             for line in sql:
                 print(line)
         else:
-            from postgres import get_conn, psycopg2
-            conn = get_conn()
-            cursor = conn.cursor()
+            cursor = pg.cursor()
             for line in sql:
                 try:
                     cursor.execute(line)
                 except (Exception, psycopg2.ProgrammingError) as exc:
                     logging.error('Error while executing %s', line)
                     raise exc
-            conn.commit()
+            pg.commit()
 
     main()

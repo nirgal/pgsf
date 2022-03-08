@@ -5,8 +5,8 @@ import logging
 from datetime import datetime
 
 import config
+import postgres as pg
 from csv_to_postgres import get_pgsql_import
-from postgres import get_conn, pg_escape_name, pg_table_name
 from query import query
 from synctable import update_sync_table
 from tabledesc import TableDesc
@@ -58,11 +58,10 @@ def download_changes(td):
     logger = logging.getLogger(__name__)
     fieldnames = td.get_sync_field_names()
 
-    conn = get_conn()
-    cursor = conn.cursor()
+    cursor = pg.cursor()
     cursor.execute(
         'SELECT syncuntil FROM {} WHERE tablename=%s'.format(
-            pg_table_name('__sync')
+            pg.table_name('__sync')
         ), (
             td.name,
         ))
@@ -107,17 +106,16 @@ def download_changes(td):
 
 def pg_merge_update(td, tmp_tablename):
     logger = logging.getLogger(__name__)
-    conn = get_conn()
-    cursor = conn.cursor()
+    cursor = pg.cursor()
 
     fieldnames = td.get_sync_field_names()
     has_isdeleted = 'IsDeleted' in fieldnames
-    quoted_table_dest = pg_table_name(td.name)
-    quoted_table_src = pg_table_name(tmp_tablename, schema='')
+    quoted_table_dest = pg.table_name(td.name)
+    quoted_table_src = pg.table_name(tmp_tablename, schema='')
     quoted_field_names = ','.join(
-            [pg_escape_name(f) for f in fieldnames])
+            [pg.escape_name(f) for f in fieldnames])
     excluded_quoted_field_names = ','.join(
-            ['EXCLUDED.'+pg_escape_name(f) for f in fieldnames])
+            ['EXCLUDED.'+pg.escape_name(f) for f in fieldnames])
     sql = '''INSERT INTO {quoted_table_dest}
              ( {quoted_field_names} )
              SELECT {quoted_field_names}
@@ -131,7 +129,7 @@ def pg_merge_update(td, tmp_tablename):
             quoted_table_dest=quoted_table_dest,
             quoted_table_src=quoted_table_src,
             quoted_field_names=quoted_field_names,
-            id=pg_escape_name(td.get_pk_fieldname()),
+            id=pg.escape_name(td.get_pk_fieldname()),
             excluded_quoted_field_names=excluded_quoted_field_names,
             wherenotdeleted='WHERE NOT "IsDeleted"' if has_isdeleted else ''
             )
@@ -148,7 +146,7 @@ def pg_merge_update(td, tmp_tablename):
               '''.format(
               quoted_table_dest=quoted_table_dest,
               quoted_table_src=quoted_table_src,
-              id=pg_escape_name(td.get_pk_fieldname()),
+              id=pg.escape_name(td.get_pk_fieldname()),
               )
         cursor.execute(sql)
         logger.info("pg DELETE rowcount: %s", cursor.rowcount)
@@ -170,15 +168,14 @@ def sync_table(tablename):
             update_sync_table(td, 'ready', update_last_refresh=True)
 
         else:
-            conn = get_conn()
-            cursor = conn.cursor()
+            cursor = pg.cursor()
 
             logger.debug('Downloaded to %s', csvfilename)
 
             tmp_tablename = 'tmp_' + tablename
             sql = 'CREATE TEMPORARY TABLE {} ( LIKE {} )'.format(
-                pg_table_name(tmp_tablename, schema=''),
-                pg_table_name(tablename))
+                pg.table_name(tmp_tablename, schema=''),
+                pg.table_name(tablename))
 
             cursor.execute(sql)
 
@@ -190,7 +187,7 @@ def sync_table(tablename):
             pg_merge_update(td, tmp_tablename)
 
             sql = 'DROP TABLE {}'.format(
-                pg_table_name(tmp_tablename, schema=''))
+                pg.table_name(tmp_tablename, schema=''))
             cursor.execute(sql)
 
             update_sync_table(
@@ -198,7 +195,7 @@ def sync_table(tablename):
                     update_syncuntil=True,
                     update_last_refresh=True)
 
-            conn.commit()
+            pg.commit()
     except Exception as e:
         # Re-raise exception, so that stderr as a message
         # cron will mail it

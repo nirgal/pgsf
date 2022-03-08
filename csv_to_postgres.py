@@ -5,8 +5,8 @@ import json
 import logging
 
 import config
+import postgres as pg
 from abort_refresh import kill_refresh
-from postgres import get_conn, pg_escape_name, pg_table_name, set_autocommit
 from tabledesc import TableDesc
 
 
@@ -31,16 +31,16 @@ def get_pgsql_import(tabledesc,
                 forcenull_fields.append(fieldname)
         if forcenull_fields:
             forcenull_fields = [
-                    pg_escape_name(f) for f in forcenull_fields]
+                    pg.escape_name(f) for f in forcenull_fields]
             force_null = ', FORCE_NULL (' + ','.join(forcenull_fields) + ')'
         else:
             force_null = ''
         return """COPY {quoted_table_name} ({fields})
                   FROM STDIN WITH (FORMAT csv, HEADER{force_null})""".format(
-                quoted_table_name=pg_table_name(
+                quoted_table_name=pg.table_name(
                     target_tablename,
                     schema),
-                fields=','.join([pg_escape_name(f) for f in fields]),
+                fields=','.join([pg.escape_name(f) for f in fields]),
                 force_null=force_null)
 
 
@@ -56,17 +56,16 @@ def job_csv_to_postgres(job, autocommit=True):
 
     kill_refresh(kill_refresh, sync_check=False)
 
-    conn = get_conn()
     if autocommit:
-        set_autocommit(True)
-    cursor = conn.cursor()
+        pg.set_autocommit(True)
+    cursor = pg.cursor()
 
     if int(job_status['numberRecordsProcessed']):
 
         td = TableDesc(table_name)
 
         sql = "TRUNCATE TABLE {quoted_table_name}".format(
-            quoted_table_name=pg_table_name(table_name))
+            quoted_table_name=pg.table_name(table_name))
         logger.debug(sql)
         cursor.execute(sql)
 
@@ -101,13 +100,13 @@ def job_csv_to_postgres(job, autocommit=True):
                 last_refresh=EXCLUDED.last_refresh,
                 status='ready'
         """.format(
-                pg_table_name('__sync')
+                pg.table_name('__sync')
             ), (
                 table_name,
                 job_status['systemModstamp']))
 
     if not autocommit:
-        conn.commit()
+        pg.commit()
 
 
 if __name__ == '__main__':
