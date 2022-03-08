@@ -9,7 +9,7 @@ DB_USER=$(python3 -c "import config; print(config.DB_USER)")
 DB_SCHEMA=$(python3 -c "import config; print(config.DB_SCHEMA)")
 
 TRY=0
-while [[ $TRY != 10 ]]
+while [[ $TRY != 20 ]]
 do
 	psql -c "update \"$DB_SCHEMA\".__sync set status='ready' where status='running'" --host="$DB_HOST" "--user=$DB_USER"
 	if [[ $? == 0 ]]
@@ -17,6 +17,6 @@ do
 		exit 0
 	fi
 	echo "psql failed. Retying..." >&2
-	sleep 10
+	sleep 3
 	TRY=$(( $TRY + 1 ))
 done
