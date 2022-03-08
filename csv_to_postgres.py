@@ -6,8 +6,7 @@ import logging
 
 import config
 from abort_refresh import kill_refresh
-from postgres import pg_escape_name, pg_table_name
-from postgres import get_pg, set_autocommit
+from postgres import get_pg, pg_escape_name, pg_table_name, set_autocommit
 from tabledesc import TableDesc
 
 
