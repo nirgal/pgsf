@@ -150,15 +150,15 @@ if __name__ == '__main__':
             for line in sql:
                 print(line)
         else:
-            from postgres import get_pg, psycopg2
-            pg = get_pg()
-            cursor = pg.cursor()
+            from postgres import get_conn, psycopg2
+            conn = get_conn()
+            cursor = conn.cursor()
             for line in sql:
                 try:
                     cursor.execute(line)
                 except (Exception, psycopg2.ProgrammingError) as exc:
                     logging.error('Error while executing %s', line)
                     raise exc
-            pg.commit()
+            conn.commit()
 
     main()

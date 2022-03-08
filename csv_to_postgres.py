@@ -6,7 +6,7 @@ import logging
 
 import config
 from abort_refresh import kill_refresh
-from postgres import get_pg, pg_escape_name, pg_table_name, set_autocommit
+from postgres import get_conn, pg_escape_name, pg_table_name, set_autocommit
 from tabledesc import TableDesc
 
 
@@ -56,10 +56,10 @@ def job_csv_to_postgres(job, autocommit=True):
 
     kill_refresh(kill_refresh, sync_check=False)
 
-    pg = get_pg()
+    conn = get_conn()
     if autocommit:
         set_autocommit(True)
-    cursor = pg.cursor()
+    cursor = conn.cursor()
 
     if int(job_status['numberRecordsProcessed']):
 
@@ -107,7 +107,7 @@ def job_csv_to_postgres(job, autocommit=True):
                 job_status['systemModstamp']))
 
     if not autocommit:
-        pg.commit()
+        conn.commit()
 
 
 if __name__ == '__main__':

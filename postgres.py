@@ -39,7 +39,7 @@ def connect_string():
     return connect_string
 
 
-def get_pg():
+def get_conn():
     '''
     Return *the* common psycopg connection to the database
     based on config
@@ -59,8 +59,8 @@ def set_autocommit(autocommit):
     Simple wrapper to set autocommit mode
     See https://www.psycopg.org/docs/usage.html#transactions-control
     '''
-    pg = get_pg()
-    pg.set_session(autocommit=autocommit)
+    conn = get_conn()
+    conn.set_session(autocommit=autocommit)
 
 
 def pg_escape_str(text):

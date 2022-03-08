@@ -35,6 +35,10 @@ class TableDesc:
         Run a query against salesforce FieldDefinition table to get extra
         field information.
         Data is cached for reuse.
+
+        Note that this table cannot be fetched entirely. Attempt result in:
+        > MALFORMED_QUERY: FieldDefinition: a filter on a reified column is
+        > required [EntityDefinitionId,DurableId]
         '''
         try:
             return self.__sf_field_definition_cache

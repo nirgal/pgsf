@@ -6,7 +6,7 @@ from datetime import datetime
 
 import config
 from csv_to_postgres import get_pgsql_import
-from postgres import get_pg, pg_escape_name, pg_table_name
+from postgres import get_conn, pg_escape_name, pg_table_name
 from query import query
 from synctable import update_sync_table
 from tabledesc import TableDesc
@@ -58,8 +58,8 @@ def download_changes(td):
     logger = logging.getLogger(__name__)
     fieldnames = td.get_sync_field_names()
 
-    pg = get_pg()
-    cursor = pg.cursor()
+    conn = get_conn()
+    cursor = conn.cursor()
     cursor.execute(
         'SELECT syncuntil FROM {} WHERE tablename=%s'.format(
             pg_table_name('__sync')
@@ -107,8 +107,8 @@ def download_changes(td):
 
 def pg_merge_update(td, tmp_tablename):
     logger = logging.getLogger(__name__)
-    pg = get_pg()
-    cursor = pg.cursor()
+    conn = get_conn()
+    cursor = conn.cursor()
 
     fieldnames = td.get_sync_field_names()
     has_isdeleted = 'IsDeleted' in fieldnames
@@ -170,8 +170,8 @@ def sync_table(tablename):
             update_sync_table(td, 'ready', update_last_refresh=True)
 
         else:
-            pg = get_pg()
-            cursor = pg.cursor()
+            conn = get_conn()
+            cursor = conn.cursor()
 
             logger.debug('Downloaded to %s', csvfilename)
 
@@ -198,7 +198,7 @@ def sync_table(tablename):
                     update_syncuntil=True,
                     update_last_refresh=True)
 
-            pg.commit()
+            conn.commit()
     except Exception as e:
         # Re-raise exception, so that stderr as a message
         # cron will mail it

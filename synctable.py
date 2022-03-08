@@ -4,7 +4,7 @@ That module handles the __sync table
 
 import logging
 
-from postgres import get_pg, pg_escape_name, pg_escape_str, pg_table_name
+from postgres import get_conn, pg_escape_name, pg_escape_str, pg_table_name
 
 
 def get_sync_status(tablename):
@@ -12,8 +12,8 @@ def get_sync_status(tablename):
     Returns the status of a table ('ready', 'error', 'runnning', ...)
     '''
     logger = logging.getLogger(__name__)
-    pg = get_pg()
-    cursor = pg.cursor()
+    conn = get_conn()
+    cursor = conn.cursor()
 
     cursor.execute(
         'SELECT status FROM {} WHERE tablename=%s'.format(
@@ -38,8 +38,8 @@ def update_sync_table(td, newstatus,
     """
     logger = logging.getLogger(__name__)
 
-    pg = get_pg()
-    cursor = pg.cursor()
+    conn = get_conn()
+    cursor = conn.cursor()
 
     field_updates = {
             'status': pg_escape_str(newstatus)
@@ -79,4 +79,4 @@ def update_sync_table(td, newstatus,
     if cursor.rowcount == 0:
         logger.error('Cannot update __sync')
         # TODO print the current status
-    pg.commit()
+    conn.commit()
