@@ -1,14 +1,14 @@
 #!/usr/bin/python3
 
+import argparse
 import logging
 
 import psycopg2
 
-from config import (DB_HOST, DB_NAME, DB_PASSWORD, DB_PORT, DB_QUOTE_NAMES,
-                    DB_SCHEMA, DB_USER)
+import config
 
 
-def connect_string():
+def connect_string(with_password=True):
     # some default values:
     connect_params = {
             # seconds of inactivity after which TCP should send a keepalive
@@ -23,16 +23,16 @@ def connect_string():
             # connection to the server is considered dead
             'keepalives_count': 3,
             }
-    if DB_HOST:
-        connect_params['host'] = DB_HOST
-    if DB_PORT:
-        connect_params['post'] = DB_PORT
-    if DB_USER:
-        connect_params['user'] = DB_USER
-    if DB_PASSWORD:
-        connect_params['password'] = DB_PASSWORD
-    if DB_NAME:
-        connect_params['dbname'] = DB_NAME
+    if config.DB_HOST:
+        connect_params['host'] = config.DB_HOST
+    if config.DB_PORT:
+        connect_params['post'] = config.DB_PORT
+    if config.DB_USER:
+        connect_params['user'] = config.DB_USER
+    if with_password and config.DB_PASSWORD:
+        connect_params['password'] = config.DB_PASSWORD
+    if config.DB_NAME:
+        connect_params['dbname'] = config.DB_NAME
     connect_string = ' '.join(
             k + '=' + str(v)
             for k, v in connect_params.items())
@@ -89,7 +89,7 @@ def escape_name(name):
     if DB_QUOTE_NAMES is set in config, quote the name
     '''
     assert '"' not in name
-    if DB_QUOTE_NAMES:
+    if config.DB_QUOTE_NAMES:
         return '"' + name + '"'
     return name
 
@@ -101,7 +101,7 @@ def table_name(name, schema=None):
             cannot create temporary relation in non-temporary schema)
     '''
     if schema is None:
-        schema = DB_SCHEMA
+        schema = config.DB_SCHEMA
 
     if schema:
         result = escape_name(schema)
@@ -110,3 +110,21 @@ def table_name(name, schema=None):
         result = ''
     result += escape_name(name)
     return result
+
+
+if __name__ == '__main__':
+    def main():
+        parser = argparse.ArgumentParser(
+            description='Print postgres connection string from config')
+        parser.parse_args()
+
+        logging.basicConfig(
+                filename=config.LOGFILE,
+                format=config.LOGFORMAT.format('pg'),
+                level=config.LOGLEVEL)
+
+        # You don't want to print your password. Ever.
+        # Create a ~/.pgpass file if you need non-interractive work.
+        print(connect_string(with_password=False))
+
+    main()
