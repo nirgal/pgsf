@@ -4,7 +4,7 @@ That module handles the __sync table
 
 import logging
 
-import postgres as pg
+import pg
 
 
 def get_sync_status(tablename):

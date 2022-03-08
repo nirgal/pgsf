@@ -5,7 +5,7 @@ import json
 import logging
 
 import config
-import postgres as pg
+import pg
 from abort_refresh import kill_refresh
 from tabledesc import TableDesc
 

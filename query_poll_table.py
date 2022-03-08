@@ -5,7 +5,7 @@ import logging
 from datetime import datetime
 
 import config
-import postgres as pg
+import pg
 from csv_to_postgres import get_pgsql_import
 from query import query
 from synctable import update_sync_table

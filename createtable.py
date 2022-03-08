@@ -6,7 +6,7 @@ import logging
 import psycopg2
 
 import config
-import postgres as pg
+import pg
 from tabledesc import TableDesc
 
 
