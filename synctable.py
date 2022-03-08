@@ -80,5 +80,3 @@ def update_sync_table(td, newstatus,
         logger.error('Cannot update __sync')
         # TODO print the current status
     pg.commit()
-
-

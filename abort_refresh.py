@@ -7,7 +7,6 @@ import sys
 import psutil
 
 import config
-from postgres import get_pg, pg_table_name
 from synctable import get_sync_status, update_sync_table
 from tabledesc import TableDesc
 
