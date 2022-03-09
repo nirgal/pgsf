@@ -196,12 +196,12 @@ def sync_table(tablename):
                     update_last_refresh=True)
 
             pg.commit()
-    except Exception as e:
+    except Exception:
         # Re-raise exception, so that stderr as a message
         # cron will mail it
         # TODO: detect some errors like a column that disapeared
         update_sync_table(td, 'ready')
-        raise e
+        raise
 
 
 if __name__ == '__main__':

@@ -2,10 +2,12 @@
 
 import argparse
 import csv
+import json
 import logging
 from collections import OrderedDict
 
 import config
+import query
 from salesforce import get_Salesforce
 
 logger = logging.getLogger(__name__)
@@ -43,7 +45,6 @@ class TableDesc:
         try:
             return self.__sf_field_definition_cache
         except AttributeError:
-            import query
             soql = """SELECT QualifiedApiName,IsIndexed
                       FROM FieldDefinition
                       WHERE EntityDefinitionId='{}'""".format(self.name)
@@ -216,8 +217,6 @@ class TableDesc:
 
 if __name__ == '__main__':
     def main():
-        import json
-
         parser = argparse.ArgumentParser(
             description='Create initial list of fields to synchronise')
         parser.add_argument(

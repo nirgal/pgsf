@@ -53,24 +53,23 @@ def download(job, pool_time=5):
             job_status = bulk.job_status(job)
             # pprint(job_status)
 
-            numberBatchesQueued = int(job_status['numberBatchesQueued'])
-            numberBatchesInProgress = int(
-                    job_status['numberBatchesInProgress'])
-            numberBatchesCompleted = int(job_status['numberBatchesCompleted'])
-            numberBatchesFailed = int(job_status['numberBatchesFailed'])
-            numberBatchesTotal = int(job_status['numberBatchesTotal'])
+            nb_queued = int(job_status['numberBatchesQueued'])
+            nb_inprogress = int(job_status['numberBatchesInProgress'])
+            nb_completed = int(job_status['numberBatchesCompleted'])
+            nb_failed = int(job_status['numberBatchesFailed'])
+            nb_total = int(job_status['numberBatchesTotal'])
             logger.info(
                     "%(total)s batch: %(queued)s Queued, "
                     "%(inprogress)s In Progress, "
                     "%(completed)s Completed, "
                     "%(failed)s Failed.", {
-                        'queued': numberBatchesQueued,
-                        'inprogress': numberBatchesInProgress,
-                        'completed': numberBatchesCompleted,
-                        'failed': numberBatchesFailed,
-                        'total': numberBatchesTotal,
+                        'queued': nb_queued,
+                        'inprogress': nb_inprogress,
+                        'completed': nb_completed,
+                        'failed': nb_failed,
+                        'total': nb_total,
                     })
-            if numberBatchesQueued == 0 and numberBatchesInProgress == 0:
+            if nb_queued == 0 and nb_inprogress == 0:
                 break
 
         except requests.exceptions.ConnectionError:

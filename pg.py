@@ -9,6 +9,10 @@ import config
 
 
 def connect_string(with_password=True):
+    '''
+    Returns postgresql connection string suitable for use in psycopg connect
+    and in psql
+    '''
     # some default values:
     connect_params = {
             # seconds of inactivity after which TCP should send a keepalive
@@ -33,10 +37,9 @@ def connect_string(with_password=True):
         connect_params['password'] = config.DB_PASSWORD
     if config.DB_NAME:
         connect_params['dbname'] = config.DB_NAME
-    connect_string = ' '.join(
+    return ' '.join(
             k + '=' + str(v)
             for k, v in connect_params.items())
-    return connect_string
 
 
 def get_conn():

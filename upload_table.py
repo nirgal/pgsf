@@ -102,10 +102,10 @@ def upload_csv(
 if __name__ == '__main__':
     def main():
         parser = argparse.ArgumentParser(
-            description='Upload a scv file into a salesforce table',
+            description='Upload a csv file into a salesforce table',
             epilog='This uses a single Salesforce Bulk V1 "update" API.'
                    ' The CSV file is cut in chunks.'
-                   ' Each chunk is submited as a bacth in the job.'
+                   ' Each chunk is submited as a batch in the job.'
             )
         parser.add_argument(
             '--max-upload-size',

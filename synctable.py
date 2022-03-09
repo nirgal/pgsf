@@ -23,7 +23,7 @@ def get_sync_status(tablename):
 
     line = cursor.fetchone()
     if line is None:
-        logger.error(f'TABLE {tablename} not found in __sync')
+        logger.error('TABLE %s not found in __sync', tablename)
         return None
 
     return line[0]
@@ -62,7 +62,7 @@ def update_sync_table(td, newstatus,
     quoted_tablename = pg.escape_str(f'{td.name}')
     if required_status is not None:
         required_status_esc = pg.escape_str(required_status)
-        andcondition = f"AND status={required_status_esc}"
+        andcondition = f'AND status={required_status_esc}'
     else:
         andcondition = ''
 

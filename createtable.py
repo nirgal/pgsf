@@ -158,9 +158,9 @@ if __name__ == '__main__':
             for line in sql:
                 try:
                     cursor.execute(line)
-                except (Exception, psycopg2.ProgrammingError) as exc:
+                except (Exception, psycopg2.ProgrammingError):
                     logging.error('Error while executing %s', line)
-                    raise exc
+                    raise
             pg.commit()
 
     main()

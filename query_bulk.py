@@ -33,7 +33,7 @@ def make_query(tabledesc,
             job = bulk.create_query_job(table_name,
                                         contentType=content_type)
         else:
-            raise exc
+            raise
     query = 'SELECT ' + ','.join(fields) + ' FROM ' + table_name
     if where:
         query += ' WHERE ' + where

@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import argparse
+import json
 import logging
 
 import config
@@ -66,8 +67,6 @@ def query_count(soql, include_deleted=False):
 
 if __name__ == '__main__':
     def main():
-        import json
-
         parser = argparse.ArgumentParser(
             description='Run an SOQL query Salesforce')
         parser.add_argument(
