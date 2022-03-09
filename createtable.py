@@ -71,6 +71,8 @@ def postgres_coldef_from_sffield(field):
             ]
     pgtype = postgres_type_raw(field)
     if field_name in ('Id', 'DurableId'):
+        # Id is ignored is DurableId exists (see bellow)
+        # So any can be used as a primary key
         pgtype += ' PRIMARY KEY'
     else:
         if not field['nillable']:
