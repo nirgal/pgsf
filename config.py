@@ -1,3 +1,10 @@
+'''
+That module wraps access to configuration file.
+Usage:
+    import config
+    print(config.DB_SCHEMA)
+'''
+
 import configparser
 from os.path import expanduser
 
