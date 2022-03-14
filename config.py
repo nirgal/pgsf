@@ -10,29 +10,24 @@ from os.path import expanduser
 
 
 def get_config():
+    '''
+    Returns the configuration file as a ConfigParser object
+    '''
     cfg = configparser.ConfigParser(interpolation=None)
     path = expanduser('~/.pgsf')
     assert cfg.read(path), "Could not read " + path
     return cfg
 
 
+def get_section(name='DEFAULT'):
+    '''
+    Returns the ConfigParser section
+    '''
+    return __cfg[name]
+
+
 __cfg = get_config()
 
-CREDIDENTIALS = {}
-CREDIDENTIALS['username'] = __cfg['salesforce']['username']
-CREDIDENTIALS['password'] = __cfg['salesforce']['password']
-CREDIDENTIALS['security_token'] = __cfg['salesforce']['security_token']
-__val = __cfg['salesforce'].get('domain', None)
-if __val:
-    CREDIDENTIALS['domain'] = __val
-
-SF_API_VERSION = __cfg['salesforce']['api_version']
-
-DB_HOST = __cfg['postgresql'].get('host', None)
-DB_PORT = __cfg['postgresql'].get('port', None)
-DB_USER = __cfg['postgresql'].get('user', None)
-DB_PASSWORD = __cfg['postgresql'].get('password', None)
-DB_NAME = __cfg['postgresql'].get('db', None)
 
 DB_SCHEMA = __cfg['postgresql'].get('schema', None)
 

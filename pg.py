@@ -27,16 +27,30 @@ def connect_string(with_password=True):
             # connection to the server is considered dead
             'keepalives_count': 3,
             }
-    if config.DB_HOST:
-        connect_params['host'] = config.DB_HOST
-    if config.DB_PORT:
-        connect_params['post'] = config.DB_PORT
-    if config.DB_USER:
-        connect_params['user'] = config.DB_USER
-    if with_password and config.DB_PASSWORD:
-        connect_params['password'] = config.DB_PASSWORD
-    if config.DB_NAME:
-        connect_params['dbname'] = config.DB_NAME
+
+    pg_cfg = config.get_section('postgresql')
+
+    host = pg_cfg.get('host', None)
+    if host:
+        connect_params['host'] = host
+
+    port = pg_cfg.get('port', None)
+    if port:
+        connect_params['post'] = port
+
+    user = pg_cfg.get('user', None)
+    if user:
+        connect_params['user'] = user
+
+    if with_password:
+        password = pg_cfg.get('password', None)
+        if password:
+            connect_params['password'] = password
+
+    dbname = pg_cfg.get('db', None)
+    if dbname:
+        connect_params['dbname'] = dbname
+
     return ' '.join(
             k + '=' + str(v)
             for k, v in connect_params.items())
