@@ -4,10 +4,13 @@
 PGSF_DIR="$(dirname $0)"
 cd "$PGSF_DIR"
 
-DB_HOST=$(python3 -c "import config; print(config.DB_HOST)")
-DB_USER=$(python3 -c "import config; print(config.DB_USER)")
+# get psql connection string from .pgsf file:
+CONNSTR=$(./pg.py)
+
+# get shema name
 DB_SCHEMA=$(python3 -c "import config; print(config.DB_SCHEMA)")
-tables=$(psql -c "select tablename from \"$DB_SCHEMA\".__sync where status='ready' and last_refresh + refresh_minutes * interval '1 minute' < current_timestamp at time zone 'utc'" --tuples-only "--host=$DB_HOST" "--user=$DB_USER")
+
+tables=$(psql -d "$CONNSTR" -c "select tablename from \"$DB_SCHEMA\".__sync where status='ready' and last_refresh + refresh_minutes * interval '1 minute' < current_timestamp at time zone 'utc'" --tuples-only)
 for table in $tables
 do
 	#echo "Syncing $table"
