@@ -78,3 +78,25 @@ def update_sync_table(td, newstatus,
         logger.error('Cannot update __sync')
         # TODO print the current status
     pg.commit()
+
+
+def insert_sync_table(td, date_last_refresh):
+
+    cursor = pg.cursor()
+
+    cursor.execute("""
+        INSERT INTO {} (tablename, syncuntil, last_refresh, status)
+        VALUES(%s, %s, current_timestamp at time zone 'UTC', 'ready')
+        ON CONFLICT (tablename)
+        DO
+            UPDATE
+            SET syncuntil=EXCLUDED.syncuntil,
+                last_refresh=EXCLUDED.last_refresh,
+                status='ready'
+        """.format(
+                pg.table_name('__sync')
+            ), (
+                td.name,
+                date_last_refresh))
+
+    pg.commit()  # TODO remove that?

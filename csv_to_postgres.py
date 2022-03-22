@@ -6,6 +6,7 @@ import logging
 
 import config
 import pg
+import synctable
 from abort_refresh import kill_refresh
 from tabledesc import TableDesc
 
@@ -60,9 +61,9 @@ def job_csv_to_postgres(job, autocommit=True):
         pg.set_autocommit(True)
     cursor = pg.cursor()
 
-    if int(job_status['numberRecordsProcessed']):
+    td = TableDesc(table_name)
 
-        td = TableDesc(table_name)
+    if int(job_status['numberRecordsProcessed']):
 
         sql = "TRUNCATE TABLE {quoted_table_name}".format(
             quoted_table_name=pg.table_name(table_name))
@@ -90,20 +91,7 @@ def job_csv_to_postgres(job, autocommit=True):
     else:
         logger.critical('%s is empty', table_name)
 
-    cursor.execute("""
-        INSERT INTO {} (tablename, syncuntil, last_refresh, status)
-        VALUES(%s, %s, current_timestamp at time zone 'UTC', 'ready')
-        ON CONFLICT (tablename)
-        DO
-            UPDATE
-            SET syncuntil=EXCLUDED.syncuntil,
-                last_refresh=EXCLUDED.last_refresh,
-                status='ready'
-        """.format(
-                pg.table_name('__sync')
-            ), (
-                table_name,
-                job_status['systemModstamp']))
+    synctable.insert_sync_table(td, job_status['systemModstamp'])
 
     if not autocommit:
         pg.commit()
