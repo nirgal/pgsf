@@ -7,6 +7,7 @@ import logging
 from collections import OrderedDict
 
 import config
+import pg
 import query
 from salesforce import get_Salesforce
 
@@ -78,6 +79,23 @@ class TableDesc:
                             'is not available from describe',
                             self.name, name)
             return self.__fields_cache
+
+    def get_pg_fields(self):
+        cursor = pg.cursor()
+        cursor.execute('''
+            select column_name, is_nullable
+            from information_schema.columns
+            where table_schema={esc_schema}
+              and table_name={esc_name}
+            order by table_name, ordinal_position'''.format(
+                esc_schema=pg.escape_str(config.DB_SCHEMA),
+                esc_name=pg.escape_str(self.name)),
+            )
+        while True:
+            line = cursor.fetchone()
+            if line is None:
+                break
+            print(line)
 
     def get_sync_field_names(self):
         '''
@@ -230,16 +248,10 @@ if __name__ == '__main__':
                 level=config.LOGLEVEL)
 
         main_td = TableDesc(args.table)
+        # main_td.get_pg_fields()
         if args.rawdump:
             print(json.dumps(main_td.get_sf_desc(), indent=2))
         else:
             main_td.make_csv_fieldlist()
 
     main()
-
-# TODO: get list of columns from PG rather than SF for queries/updates/...
-# select table_name, column_name, is_nullable, *
-# from information_schema.columns
-# where table_schema='salesforce'
-# order by table_name, ordinal_position
-
