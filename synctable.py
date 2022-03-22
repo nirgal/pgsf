@@ -81,7 +81,11 @@ def update_sync_table(td, newstatus,
 
 
 def insert_sync_table(td, date_last_refresh):
-
+    '''
+    Insert a "table is reasy" entry in sync table
+    UTC date should be given a an argument
+    '''
+    print('refresh:', date_last_refresh)
     cursor = pg.cursor()
 
     cursor.execute("""
