@@ -17,8 +17,7 @@ class TableDesc:
     def __init__(self, name):
         self.name = name
 
-    @property
-    def sf_desc(self):
+    def get_sf_desc(self):
         '''
         Connects to saleforce and return raw description.
         Data is cached for reuse.
@@ -31,8 +30,7 @@ class TableDesc:
             self.__sf_desc_cache = accessor.describe()
             return self.__sf_desc_cache
 
-    @property
-    def sf_field_definition(self):
+    def get_sf_field_definition(self):
         '''
         Run a query against salesforce FieldDefinition table to get extra
         field information.
@@ -63,10 +61,10 @@ class TableDesc:
         except AttributeError:
             self.__fields_cache = OrderedDict()
             # First get the info from sf_desc
-            for sf_field_info in self.sf_desc['fields']:
+            for sf_field_info in self.get_sf_desc()['fields']:
                 self.__fields_cache[sf_field_info['name']] = sf_field_info
             # Then the the IsIndexed from table FieldDefinition
-            sf_definition = self.sf_field_definition
+            sf_definition = self.get_sf_field_definition()
             for record in sf_definition:
                 name = record['QualifiedApiName']
                 # if name == 'ChannelProgramName':
@@ -233,8 +231,15 @@ if __name__ == '__main__':
 
         main_td = TableDesc(args.table)
         if args.rawdump:
-            print(json.dumps(main_td.sf_desc, indent=2))
+            print(json.dumps(main_td.get_sf_desc(), indent=2))
         else:
             main_td.make_csv_fieldlist()
 
     main()
+
+# TODO: get list of columns from PG rather than SF for queries/updates/...
+# select table_name, column_name, is_nullable, *
+# from information_schema.columns
+# where table_schema='salesforce'
+# order by table_name, ordinal_position
+
