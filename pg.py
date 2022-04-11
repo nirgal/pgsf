@@ -15,6 +15,10 @@ def connect_string(with_password=True):
     '''
     # some default values:
     connect_params = {
+            # Maximum time to wait while connecting, in seconds.
+            # Zero, negative, or not specified means wait indefinitely.
+            'connect_timeout': 10,
+
             # seconds of inactivity after which TCP should send a keepalive
             # message to the server
             'keepalives_idle': 10,
