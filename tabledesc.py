@@ -17,19 +17,20 @@ logger = logging.getLogger(__name__)
 class TableDesc:
     def __init__(self, name):
         self.name = name
+        self.__sf_desc_cache = None
+        self.__sf_field_definition_cache = None
+        self.__fields_cache = None
 
     def get_sf_desc(self):
         '''
         Connects to saleforce and return raw description.
         Data is cached for reuse.
         '''
-        try:
-            return self.__sf_desc_cache
-        except AttributeError:
+        if self.__sf_desc_cache is None:
             sf = get_Salesforce()
             accessor = sf.__getattr__(self.name)
             self.__sf_desc_cache = accessor.describe()
-            return self.__sf_desc_cache
+        return self.__sf_desc_cache
 
     def get_sf_field_definition(self):
         '''
@@ -41,25 +42,20 @@ class TableDesc:
         > MALFORMED_QUERY: FieldDefinition: a filter on a reified column is
         > required [EntityDefinitionId,DurableId]
         '''
-        try:
-            return self.__sf_field_definition_cache
-        except AttributeError:
+        if self.__sf_field_definition_cache is None:
             soql = """SELECT QualifiedApiName,IsIndexed
                       FROM FieldDefinition
                       WHERE EntityDefinitionId='{}'""".format(self.name)
             qry = query.query(soql)
             self.__sf_field_definition_cache = list(qry)
-            return self.__sf_field_definition_cache
+        return self.__sf_field_definition_cache
 
     def get_sf_fields(self):
         '''
         Return the fields as an OrderedDict.
         Data is cached for reuse.
         '''
-        try:
-            # return cache if available
-            return self.__fields_cache
-        except AttributeError:
+        if self.__fields_cache is None:
             self.__fields_cache = OrderedDict()
             # First get the info from sf_desc
             for sf_field_info in self.get_sf_desc()['fields']:
@@ -78,7 +74,7 @@ class TableDesc:
                             'Table %s, field %s '
                             'is not available from describe',
                             self.name, name)
-            return self.__fields_cache
+        return self.__fields_cache
 
     def get_pg_fields(self):
         cursor = pg.cursor()
