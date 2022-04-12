@@ -163,7 +163,7 @@ def sync_table(tablename):
         csvfilename = download_changes(td)
 
         if csvfilename is None:
-            logger.info('No change in table %s')
+            logger.info('No change in table %s', tablename)
 
             update_sync_table(td, 'ready', update_last_refresh=True)
 
