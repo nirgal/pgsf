@@ -12,13 +12,21 @@ from tabledesc import TableDesc
 
 
 def find_refresh_process(tablename, sync_check=True):
+    '''
+    Find the psutil.Process that is currently refreshing a table.
+    Can return None.
+
+    If sync_check, __sync table is read first, verifying the state is
+    'running'. Returns None if it is not.
+    '''
     logger = logging.getLogger(__name__)
 
     if sync_check:
         status = get_sync_status(tablename)
         if status != 'running':
-            logger.error(f'TABLE {tablename} status is {status}')
-            return
+            logger.error('TABLE %s status is %s',
+                    tablename, status)
+            return None
     else:
         logger.debug('Skipping sync table checks')
 
@@ -31,9 +39,15 @@ def find_refresh_process(tablename, sync_check=True):
                 and cmdline[2] == tablename
            ):
             return proc
+    return None
 
 
 def kill_refresh(tablename, sync_check=True):
+    '''
+    Stop a table from being refreshed.
+    Any running refresh process is killed.
+    __sync table status is set to 'error'.
+    '''
     logger = logging.getLogger(__name__)
 
     td = TableDesc(tablename)
