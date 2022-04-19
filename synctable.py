@@ -7,7 +7,7 @@ import logging
 import pg
 
 
-def get_sync_status(tablename):
+def get_status(tablename):
     '''
     Returns the status of a table ('ready', 'error', 'runnning', ...)
     '''
@@ -29,9 +29,9 @@ def get_sync_status(tablename):
     return line[0]
 
 
-def update_sync_table(td, newstatus,
-                      update_syncuntil=False, update_last_refresh=False,
-                      required_status=None):
+def update(td, newstatus,
+           update_syncuntil=False, update_last_refresh=False,
+           required_status=None):
     """
     Update table salesforce.__sync
     """
@@ -80,7 +80,7 @@ def update_sync_table(td, newstatus,
     pg.commit()
 
 
-def insert_sync_table(td, date_last_refresh):
+def insert(td, date_last_refresh):
     '''
     Insert a "table is reasy" entry in sync table
     UTC date should be given a an argument

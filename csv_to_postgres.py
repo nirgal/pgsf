@@ -91,7 +91,7 @@ def job_csv_to_postgres(job, autocommit=True):
     else:
         logger.critical('%s is empty', table_name)
 
-    synctable.insert_sync_table(td, job_status['systemModstamp'])
+    synctable.insert(td, job_status['systemModstamp'])
 
     if not autocommit:
         pg.commit()

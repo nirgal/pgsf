@@ -8,7 +8,7 @@ import config
 import pg
 from csv_to_postgres import get_pgsql_import
 from query import query
-from synctable import update_sync_table
+import synctable
 from tabledesc import TableDesc
 
 
@@ -157,7 +157,7 @@ def sync_table(tablename):
 
     td = TableDesc(tablename)
 
-    update_sync_table(td, 'running', required_status='ready')
+    synctable.update(td, 'running', required_status='ready')
 
     try:
         csvfilename = download_changes(td)
@@ -165,7 +165,7 @@ def sync_table(tablename):
         if csvfilename is None:
             logger.info('No change in table %s', tablename)
 
-            update_sync_table(td, 'ready', update_last_refresh=True)
+            synctable.update(td, 'ready', update_last_refresh=True)
 
         else:
             cursor = pg.cursor()
@@ -190,7 +190,7 @@ def sync_table(tablename):
                 pg.table_name(tmp_tablename, schema=''))
             cursor.execute(sql)
 
-            update_sync_table(
+            synctable.update(
                     td, 'ready',
                     update_syncuntil=True,
                     update_last_refresh=True)
@@ -200,7 +200,7 @@ def sync_table(tablename):
         # Re-raise exception, so that stderr as a message
         # cron will mail it
         # TODO: detect some errors like a column that disapeared
-        update_sync_table(td, 'ready')
+        synctable.update(td, 'ready')
         raise
 
 

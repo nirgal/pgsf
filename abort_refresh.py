@@ -11,7 +11,7 @@ import sys
 import psutil
 
 import config
-from synctable import get_sync_status, update_sync_table
+import synctable
 from tabledesc import TableDesc
 
 
@@ -26,7 +26,7 @@ def find_refresh_process(tablename, sync_check=True):
     logger = logging.getLogger(__name__)
 
     if sync_check:
-        status = get_sync_status(tablename)
+        status = synctable.get_status(tablename)
         if status != 'running':
             logger.error('TABLE %s status is %s',
                     tablename, status)
@@ -61,7 +61,7 @@ def kill_refresh(tablename, sync_check=True):
         logger.error('Process not found')
         return False
 
-    update_sync_table(td, 'error')
+    synctable.update(td, 'error')
 
     proc.kill()
 
