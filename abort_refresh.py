@@ -1,4 +1,8 @@
 #!/usr/bin/python3
+'''
+Module to handle cancellation of refreshes.
+It handles the system killing of process.
+'''
 
 import argparse
 import logging
