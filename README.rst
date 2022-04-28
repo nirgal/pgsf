@@ -37,6 +37,8 @@ will create a bulk download job, and print a jobid.
 
 will download all the csv from that job.
 
+
+Before createtable, you have to update __sync table, and update status at 'error' to stop auto update.
 ::
 
    ./createtable.py Contact
@@ -48,6 +50,8 @@ will create a PostgreSQL version of a SF table
    ./csv_to_postgres.py <jobid>
 
 will import the job csv files into a PostgreSQL table.
+After csv_to_postgres, you have to update __sync table, and update status at 'ready' to up auto update.
+
 
 ::
 
