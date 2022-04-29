@@ -31,7 +31,7 @@ def csv_reader(csvfilename):
     Takes a postgresql csv file (commas, headers, escape " as "")
     Yields lines, as string (not list)
     """
-    with open(csvfilename) as csvfile:
+    with open(csvfilename, encoding='utf-8') as csvfile:
         reader = csv.reader(csvfile, **csvdialect)
         for line in reader:
             buf = io.StringIO()
@@ -65,13 +65,13 @@ def csv_split(
             logger.debug(
                     "Chunk with %s bytes, %s lines",
                     len(buff), chunk_nb_lines)
-            yield io.StringIO(buff)
+            yield io.BytesIO(buff.encode())
             buff = headers
             chunk_nb_lines = 0
         buff += line
         chunk_nb_lines += 1
     logger.debug("Chunk with %s bytes, %s lines", len(buff), chunk_nb_lines)
-    yield io.StringIO(buff)
+    yield io.BytesIO(buff.encode())
 
 
 def upload_csv(
